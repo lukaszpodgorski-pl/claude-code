@@ -82,6 +82,37 @@ Kamienie milowe nie są wykrywane automatycznie — to ręcznie wybrana lista
 zakotwiczona w konkretnych wersjach, zweryfikowana przez wyszukanie pierwszego
 wystąpienia danej funkcji w changelogu.
 
+## Wdrożenie na Cloudflare
+
+Strona stoi na **Workerze ze statycznymi zasobami**, nie na Pages. Powód: Pages
+przypina się do całej nazwy hosta, a ta strona ma żyć pod ścieżką
+`/claude-code/` na istniejącej domenie, której korzeń obsługuje co innego.
+Worker przechwytuje tylko dwie trasy, reszta domeny idzie na stary origin bez zmian.
+
+Pierwsze wdrożenie, raz:
+
+```powershell
+npx wrangler login     # logowanie do konta Cloudflare z tą domeną
+npx wrangler deploy    # tworzy Workera, wysyła public/ i rejestruje trasy
+```
+
+Kolejne wdrożenia robi GitHub Actions przy każdym pushu do `main`
+(`.github/workflows/deploy.yml`). Wymaga dwóch sekretów w repozytorium:
+
+| Sekret | Skąd |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | panel Cloudflare, szablon **Edit Cloudflare Workers** |
+| `CLOUDFLARE_ACCOUNT_ID` | `npx wrangler whoami` po zalogowaniu |
+
+```powershell
+gh secret set CLOUDFLARE_API_TOKEN --repo lukaszpodgorski-pl/claude-code
+gh secret set CLOUDFLARE_ACCOUNT_ID --repo lukaszpodgorski-pl/claude-code
+```
+
+Trasy są w `wrangler.toml`. Są dwie, bo wzorzec `/claude-code/*` nie łapie adresu
+bez kończącego ukośnika. Warunkiem działania tras jest rekord DNS domeny
+proxowany przez Cloudflare (pomarańczowa chmurka).
+
 ## Aktualizacja
 
 Strona odświeża się sama. Zadanie `claude_code_timeline` w kontenerze `automation`
