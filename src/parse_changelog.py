@@ -1,16 +1,25 @@
 # -*- coding: utf-8 -*-
 """Parsuje changelog Claude Code + daty z npm -> data/releases.json
 
+Zrodla sa zdalne (GitHub + rejestr npm) z kopia w .cache. Gdy siec padnie,
+schodzimy do kopii, a w ostatecznosci do lokalnego cache Claude Code na dysku.
+Dzieki temu ten sam kod dziala na Windowsie i w kontenerze automation.
+
 Uruchamiane samodzielnie; build.py korzysta z tego modulu.
 """
 import json
 import os
 import re
+import sys
 from datetime import date, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CHANGELOG = os.path.join(os.path.expanduser("~"), ".claude", "cache", "changelog.md")
-NPM_TIMES = os.path.join(HERE, "data", "npm_times.json")
+sys.path.insert(0, HERE)
+import fetch_sources  # noqa: E402
+
+CACHE_DIR = os.path.join(os.path.dirname(HERE), ".cache")
+LOCAL_CLAUDE_CACHE = os.path.join(os.path.expanduser("~"), ".claude", "cache", "changelog.md")
+SEED_TIMES = os.path.join(HERE, "data", "npm_times.json")
 OUT = os.path.join(HERE, "data", "releases.json")
 
 
@@ -24,10 +33,39 @@ def vkey(v):
     return tuple(out[:3])
 
 
-def parse_changelog(path=CHANGELOG):
+def changelog_text(offline=False):
+    """Tresc changelogu: siec -> kopia w .cache -> lokalny cache Claude Code."""
+    if not offline:
+        try:
+            return fetch_sources.fetch_changelog(CACHE_DIR)
+        except Exception as e:
+            print("uwaga: pobranie changelogu nie powiodlo sie (%s), schodze do kopii" % e,
+                  file=sys.stderr)
+    for path in (os.path.join(CACHE_DIR, fetch_sources.CHANGELOG_FILE), LOCAL_CLAUDE_CACHE):
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return f.read()
+    raise SystemExit("Brak changelogu: nie ma sieci ani zadnej kopii na dysku")
+
+
+def npm_times(offline=False):
+    """Mapa wersja -> data: siec -> kopia w .cache -> zalazek w repo."""
+    if not offline:
+        try:
+            return fetch_sources.fetch_npm_times(CACHE_DIR)
+        except Exception as e:
+            print("uwaga: pobranie dat z npm nie powiodlo sie (%s), schodze do kopii" % e,
+                  file=sys.stderr)
+    for path in (os.path.join(CACHE_DIR, fetch_sources.NPM_FILE), SEED_TIMES):
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    raise SystemExit("Brak dat wydan: nie ma sieci ani zadnej kopii na dysku")
+
+
+def parse_changelog(text):
     """-> [{'version': str, 'entries': [str]}] w kolejnosci pliku (najnowsze pierwsze)"""
-    with open(path, "r", encoding="utf-8") as f:
-        lines = f.read().splitlines()
+    lines = text.splitlines()
 
     releases = []
     cur = None
@@ -64,11 +102,8 @@ def parse_changelog(path=CHANGELOG):
     return releases
 
 
-def attach_dates(releases):
-    """Dokleja daty z npm; brakujace interpoluje z sasiadow (changelog jest posortowany malejaco)."""
-    with open(NPM_TIMES, "r", encoding="utf-8") as f:
-        times = json.load(f)
-
+def attach_dates(releases, times):
+    """Dokleja daty z npm; brakujace interpoluje z sasiadow (changelog posortowany malejaco)."""
     for r in releases:
         r["date"] = times.get(r["version"])
         r["date_exact"] = r["date"] is not None
@@ -101,8 +136,8 @@ def attach_dates(releases):
     return releases
 
 
-def load():
-    rel = attach_dates(parse_changelog())
+def load(offline=False):
+    rel = attach_dates(parse_changelog(changelog_text(offline)), npm_times(offline))
     # chronologicznie rosnaco: data, potem wersja
     rel.sort(key=lambda r: (r["date"], vkey(r["version"])))
     return rel
