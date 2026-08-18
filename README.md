@@ -1,23 +1,24 @@
-# Oś czasu Claude Code
+# Claude Code — oś czasu wydań
 
-Interaktywna, przewijana w poziomie mapa całej historii wydań Claude Code —
-od `0.2.21` (3 marca 2025) do `2.1.234` (17 sierpnia 2026). **366 wydań, 4489 zmian,
-43 kamienie milowe.**
+Interaktywna, przewijana w poziomie mapa całej historii Claude Code: **366 wydań,
+4489 zmian, 43 kamienie milowe**, od `0.2.21` (3 marca 2025) do dziś.
 
-Otwórz `timeline.html` w przeglądarce. Plik jest samodzielny — nie wymaga serwera
-ani internetu (bez sieci fonty IBM Plex podmienią się na systemowe).
+Strona: **https://lukaszpodgorski.pl/claude-code/timeline**
+
+Dwa języki (polski i angielski), tryb jasny i ciemny, wyszukiwarka pełnotekstowa
+po obu wersjach językowych naraz. Cały changelog jest przetłumaczony na polski.
 
 ## Skąd dane
 
 | Co | Źródło |
 |---|---|
-| treść changelogu | `%USERPROFILE%\.claude\cache\changelog.md` (lokalny cache Claude Code) |
-| daty wydań | rejestr npm — `https://registry.npmjs.org/@anthropic-ai/claude-code` |
+| treść changelogu | `raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md` |
+| daty wydań | rejestr npm — `registry.npmjs.org/@anthropic-ai/claude-code` |
+| tłumaczenie na polski | Claude Code w trybie headless, wsadami po 40 wpisów |
 
 Changelog nie zawiera dat, dlatego doklejane są daty publikacji paczek z npm.
-358 z 366 wersji ma datę dokładną; 8 (m.in. `0.2.21`, `1.0.97`, `2.1.43`) nigdy nie
-trafiło do rejestru — ich daty są interpolowane z sąsiednich wydań i oznaczone
-w panelu jako „data szacowana".
+Osiem wersji (m.in. `0.2.21`, `1.0.97`, `2.1.43`) nigdy nie trafiło do rejestru —
+ich daty są interpolowane z sąsiednich wydań i oznaczone w panelu jako „data szacowana".
 
 ## Jak czytać
 
@@ -39,44 +40,36 @@ inaczej `2.1.0` (90 wpisów) spłaszczyłoby wszystkie pozostałe wydania.
 | przewijanie w bok | kółko myszy, przeciąganie tła, `←` `→`, `PageUp` / `PageDown` |
 | początek / koniec | `Home` / `End` |
 | następny / poprzedni kamień milowy | `N` / `M` albo przyciski w nagłówku |
-| szukanie w treści zmian | `/` albo pole w nagłówku; `Enter` skacze do kolejnego trafienia |
-| filtr kategorii | kliknięcie w chip legendy (ponowne kliknięcie zdejmuje filtr) |
+| szukanie | `/` albo pole w nagłówku; `↑` `↓` po wynikach, `Enter` otwiera |
+| filtr kategorii | kliknięcie w chip legendy (ponowne zdejmuje filtr) |
+| język, motyw | przyciski `PL`/`EN` i ikona motywu (auto → jasny → ciemny) |
 | szczegóły wydania | kliknięcie w słupek; `Esc` zamyka panel |
-| skok w czasie | kliknięcie lub przeciągnięcie po minimapie na dole |
 
-## Przebudowa
+Wybór języka i motywu zostaje w `localStorage`. Język można wymusić parametrem
+`?lang=en` albo `?lang=pl`.
 
-```powershell
-python build.py
-```
-
-Generuje `timeline.html` (samodzielny dokument) i `artifact.html` (sama treść strony,
-bez `<html>`/`<head>`/`<body>` — do publikacji jako Artifact).
-
-Po nowych wydaniach Claude Code odśwież najpierw daty z npm:
+## Budowa
 
 ```powershell
-$r = Invoke-RestMethod "https://registry.npmjs.org/@anthropic-ai/claude-code"
-$map = @{}
-foreach ($p in $r.time.PSObject.Properties) {
-  if ($p.Name -notin @('created','modified')) { $map[$p.Name] = ([datetime]$p.Value).ToString('yyyy-MM-dd') }
-}
-$map | ConvertTo-Json -Depth 3 | Set-Content data\npm_times.json -Encoding UTF8
-python build.py
+python src\build.py            # pobiera źródła, buduje public\timeline\index.html
+python src\build.py --offline  # to samo, ale wyłącznie z kopii w .cache
+python src\translate.py        # dotłumacza wpisy, których nie ma w pamięci
+python -m pytest tests -q      # testy
 ```
 
 ## Pliki
 
 | Plik | Rola |
 |---|---|
-| `build.py` | klasyfikacja zmian na kategorie i rodzaje, sklejenie danych z szablonem |
-| `parse_changelog.py` | parser `changelog.md` + dołączenie dat z npm |
-| `milestones.py` | kuratorowana lista 43 kamieni milowych i 4 er |
-| `template.html` | szablon strony (CSS + JS), znacznik `/*__DATA__*/` na dane |
-| `data/npm_times.json` | mapa wersja → data publikacji |
-| `data/releases.json` | sparsowany changelog z datami (produkt uboczny parsera) |
-| `timeline.html` | **gotowa strona do otwarcia** |
-| `artifact.html` | ta sama strona w formie treści do publikacji |
+| `src/fetch_sources.py` | pobranie changelogu i dat z npm, kopia w `.cache` |
+| `src/parse_changelog.py` | parser changelogu + doklejenie i interpolacja dat |
+| `src/build.py` | klasyfikacja zmian, sklejenie danych z szablonem |
+| `src/translate.py` | tłumaczenie wsadowe przez `claude -p` |
+| `src/translations.py` | pamięć tłumaczeń kluczowana sha1 oryginału |
+| `src/milestones.py` | kuratorowana lista 43 kamieni milowych i 4 er, dwujęzyczna |
+| `src/i18n.py` | teksty interfejsu i etykiety kategorii w obu językach |
+| `src/template.html` | szablon strony (CSS + JS), znacznik `/*__DATA__*/` na dane |
+| `public/` | to, co serwuje Cloudflare Pages |
 
 ## Kategorie
 
@@ -88,3 +81,24 @@ o MCP, modelach czy uprawnieniach. Do kategorii „Pozostałe" wpada ok. 5% zmia
 Kamienie milowe nie są wykrywane automatycznie — to ręcznie wybrana lista
 zakotwiczona w konkretnych wersjach, zweryfikowana przez wyszukanie pierwszego
 wystąpienia danej funkcji w changelogu.
+
+## Aktualizacja
+
+Strona odświeża się sama. Zadanie `claude_code_timeline` w kontenerze `automation`
+raz dziennie pobiera changelog, tłumaczy nowe wpisy, przebudowuje stronę i wypycha
+commit do tego repozytorium; Cloudflare Pages wdraża go automatycznie.
+Bez nowych wydań zadanie kończy się bez commita.
+
+---
+
+## English
+
+An interactive timeline of every Claude Code release, built from the public
+Anthropic changelog and npm publication dates. The interface and the full changelog
+are available in both Polish and English; light and dark themes; full-text search
+that matches across both languages at once.
+
+The site updates itself: a daily job fetches the changelog, translates new entries,
+rebuilds the page and pushes a commit, which Cloudflare Pages deploys.
+
+Data belongs to Anthropic; this repository only reorganises and translates it.

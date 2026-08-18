@@ -4,3 +4,4 @@ __pycache__/
 logs/
 .env
 src/data/releases.json
+build/
