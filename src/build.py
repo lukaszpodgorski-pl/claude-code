@@ -1,35 +1,32 @@
 # -*- coding: utf-8 -*-
-"""Buduje oś czasu Claude Code: changelog + daty npm -> timeline.html / artifact.html
+"""Buduje oś czasu Claude Code: changelog + daty npm + tłumaczenia -> strona.
 
-Uruchomienie:  python build.py
+Wyjście:
+  public/timeline/index.html  pełny dokument serwowany przez Cloudflare Pages
+  build/artifact.html         sama treść, do okazjonalnej publikacji jako Artifact
+
+Uruchomienie:  python src/build.py
 """
 import json
 import os
 import re
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from parse_changelog import load, vkey  # noqa: E402
-from milestones import MILESTONES, ERAS  # noqa: E402
-
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
 
-# --- kategorie: klucz, etykieta, kolor -------------------------------------
-TOPICS = [
-    ("model",    "Modele i rozumowanie",       "#D97757"),
-    ("agents",   "Agenci, workflow, plan mode", "#F5B841"),
-    ("mcp",      "MCP i konektory",            "#45C8E0"),
-    ("skills",   "Skille, pluginy, komendy",   "#7FD858"),
-    ("hooks",    "Hooki i harmonogramy",       "#B588F0"),
-    ("security", "Uprawnienia i sandbox",      "#F2545B"),
-    ("ide",      "IDE, desktop, web",          "#5B8DEF"),
-    ("sdk",      "SDK, API, plany",            "#2DD4A7"),
-    ("context",  "Kontekst i pamięć",          "#9BA6F5"),
-    ("ui",       "Interfejs terminala",        "#F27DB0"),
-    ("core",     "Rdzeń i platformy",          "#A0AEC0"),
-    ("other",    "Pozostałe",                  "#6E675E"),
-]
+from parse_changelog import load  # noqa: E402
+from milestones import MILESTONES, ERAS  # noqa: E402
+import i18n  # noqa: E402
+import translations  # noqa: E402
+
+TOPICS = i18n.TOPICS
 TIDX = {t[0]: i for i, t in enumerate(TOPICS)}
+
+TRANSLATIONS = os.path.join(HERE, "data", "translations.json")
+OUT_PAGE = os.path.join(ROOT, "public", "timeline", "index.html")
+OUT_ARTIFACT = os.path.join(ROOT, "build", "artifact.html")
 
 # --- reguły klasyfikacji: pierwsza pasująca wygrywa ------------------------
 RULES = [
@@ -100,76 +97,102 @@ def kind_of(text):
     return 2
 
 
-def build():
-    rel = load()
+def make_data(offline=False):
+    """Skleja changelog, klasyfikację, tłumaczenia i teksty w jeden ładunek."""
+    rel = load(offline=offline)
     by_v = {r["version"]: i for i, r in enumerate(rel)}
+    store = translations.load(TRANSLATIONS)
 
     releases = []
     for r in rel:
-        ents = [[topic_of(e), kind_of(e), e] for e in r["entries"]]
+        ents = []
+        for e in r["entries"]:
+            # pusty łańcuch zamiast braku klucza: strona pokaże oryginał
+            ents.append([topic_of(e), kind_of(e), e, store.get(translations.key(e), "")])
         releases.append([r["version"], r["date"], 1 if r["date_exact"] else 0, ents])
 
     miles = []
-    for v, title, desc, topic, big in MILESTONES:
-        if v not in by_v:
-            raise SystemExit("Kamień milowy wskazuje na nieistniejącą wersję: " + v)
-        miles.append({"i": by_v[v], "title": title, "desc": desc, "topic": topic, "big": bool(big)})
+    for m in MILESTONES:
+        if m["v"] not in by_v:
+            raise SystemExit("Kamień milowy wskazuje na nieistniejącą wersję: " + m["v"])
+        miles.append({"i": by_v[m["v"]], "topic": m["topic"], "big": bool(m["big"]),
+                      "title": {"pl": m["title_pl"], "en": m["title_en"]},
+                      "desc": {"pl": m["desc_pl"], "en": m["desc_en"]}})
     miles.sort(key=lambda m: m["i"])
 
     eras = []
-    for prefix, name, sub in ERAS:
-        idx = [i for i, r in enumerate(rel) if r["version"].startswith(prefix)]
+    for e in ERAS:
+        idx = [i for i, r in enumerate(rel) if r["version"].startswith(e["prefix"])]
         if not idx:
             continue
-        eras.append({"name": name, "sub": sub, "from": idx[0], "to": idx[-1]})
+        eras.append({"name": {"pl": e["name_pl"], "en": e["name_en"]},
+                     "sub": {"pl": e["sub_pl"], "en": e["sub_en"]},
+                     "from": idx[0], "to": idx[-1]})
 
-    data = {
-        "topics": TOPICS,
+    wpisy = [e for r in rel for e in r["entries"]]
+    przetlumaczone, unikalne = translations.coverage(wpisy, store)
+
+    return {
+        "topics": [list(t) for t in TOPICS],
         "eras": eras,
         "milestones": miles,
         "releases": releases,
+        "ui": i18n.UI,
         "meta": {
             "releases": len(releases),
-            "entries": sum(len(r[3]) for r in releases),
+            "entries": len(wpisy),
             "generated": rel[-1]["date"],
+            "translated": przetlumaczone,
+            "unique": unikalne,
         },
     }
 
+
+def build(offline=False):
+    data = make_data(offline=offline)
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+
     with open(os.path.join(HERE, "template.html"), "r", encoding="utf-8") as f:
         tpl = f.read()
     if "/*__DATA__*/" not in tpl:
         raise SystemExit("Brak znacznika /*__DATA__*/ w template.html")
     body = tpl.replace("/*__DATA__*/", payload)
 
-    art = os.path.join(HERE, "artifact.html")
-    with open(art, "w", encoding="utf-8") as f:
-        f.write(body)
-
+    head, rest = body.split("\n", 1)
     full = ('<!doctype html>\n<html lang="pl">\n<head>\n<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-            + body.split("\n", 1)[0] + "\n</head>\n<body>\n"
-            + body.split("\n", 1)[1] + "\n</body>\n</html>\n")
-    out = os.path.join(HERE, "timeline.html")
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(full)
+            '<meta name="description" content="Interaktywna oś czasu wszystkich wydań Claude Code. '
+            'Interactive timeline of every Claude Code release.">\n'
+            + head + "\n</head>\n<body>\n" + rest + "\n</body>\n</html>\n")
 
-    # statystyki kontrolne
+    for path, tresc in ((OUT_PAGE, full), (OUT_ARTIFACT, body)):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(tresc)
+
+    return data, len(full)
+
+
+def report(data, rozmiar):
     per_topic = {t[0]: 0 for t in TOPICS}
     per_kind = [0, 0, 0]
-    for r in releases:
-        for t, k, _ in r[3]:
-            per_topic[TOPICS[t][0]] += 1
-            per_kind[k] += 1
+    for r in data["releases"]:
+        for e in r[3]:
+            per_topic[TOPICS[e[0]][0]] += 1
+            per_kind[e[1]] += 1
+    m = data["meta"]
     print("wydań: %d   zmian: %d   kamieni milowych: %d   er: %d"
-          % (len(releases), data["meta"]["entries"], len(miles), len(eras)))
+          % (m["releases"], m["entries"], len(data["milestones"]), len(data["eras"])))
     print("rodzaje: nowości %d | ulepszenia %d | poprawki %d" % (per_kind[2], per_kind[1], per_kind[0]))
+    print("tłumaczenia: %d/%d unikalnych (%.1f%%)"
+          % (m["translated"], m["unique"], 100.0 * m["translated"] / max(m["unique"], 1)))
     for t in TOPICS:
         n = per_topic[t[0]]
         print("  %-9s %5d  %s" % (t[0], n, "#" * int(n / 40)))
-    print("timeline.html: %.1f kB" % (os.path.getsize(out) / 1024))
-    print("artifact.html: %.1f kB" % (os.path.getsize(art) / 1024))
+    print("strona: %.1f kB -> %s" % (rozmiar / 1024, os.path.relpath(OUT_PAGE, ROOT)))
 
 
 if __name__ == "__main__":
-    build()
+    offline = "--offline" in sys.argv
+    data, rozmiar = build(offline=offline)
+    report(data, rozmiar)
