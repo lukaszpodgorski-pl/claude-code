@@ -7,3 +7,4 @@ src/data/releases.json
 build/
 docs/
 .wrangler/
+.pytest_cache/
