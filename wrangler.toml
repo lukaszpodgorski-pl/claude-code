@@ -7,7 +7,13 @@ compatibility_date = "2026-08-18"
 directory = "./public"
 binding = "ASSETS"
 
-# strona zyje pod sciezka na istniejacej domenie, nie pod wlasna nazwa hosta
+# Strona zyje pod sciezka na istniejacej domenie, nie pod wlasna nazwa hosta.
+# Dwie trasy, bo wzorzec z /* nie lapie adresu bez ukosnika na koncu:
+# /claude-code poszloby na stary origin i skonczylo sie jego 404.
+[[routes]]
+pattern = "lukaszpodgorski.pl/claude-code"
+zone_name = "lukaszpodgorski.pl"
+
 [[routes]]
 pattern = "lukaszpodgorski.pl/claude-code/*"
 zone_name = "lukaszpodgorski.pl"
