@@ -149,10 +149,15 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
 #lang{font-family:var(--mono);font-weight:600;letter-spacing:.03em;min-width:34px}
 
 /* ---------- panel wynikow wyszukiwania ---------- */
-#results{position:absolute;top:calc(100% + 8px);right:0;width:min(520px,94vw);max-height:64vh;
-  z-index:60;background:var(--panel-grad);border:1px solid var(--line2);border-radius:12px;
-  box-shadow:var(--shadow-lg);display:none;flex-direction:column;overflow:hidden}
+/* z-index ponad panelem wydania (80): klikniecie w wynik otwiera panel,
+   a lista musi zostac widoczna, zeby dalo sie przejsc do kolejnego trafienia */
+#results{position:fixed;top:78px;right:14px;width:min(520px,94vw);max-height:64vh;
+  z-index:85;background:var(--panel-grad);border:1px solid var(--line2);border-radius:12px;
+  box-shadow:var(--shadow-lg);display:none;flex-direction:column;overflow:hidden;
+  transition:right .2s cubic-bezier(.4,0,.2,1)}
 #results.open{display:flex}
+/* gdy panel wydania jest otwarty, lista przesuwa sie obok niego, a nie na niego */
+@media (min-width:1080px){#results.obok{right:min(474px,calc(100vw - 540px))}}
 #rhead{flex:none;padding:8px 12px;border-bottom:1px solid var(--line);font-size:11px;
   color:var(--dim);font-family:var(--mono);display:flex;justify-content:space-between;gap:10px}
 #rlist{overflow-y:auto;scrollbar-color:var(--scroll) transparent}
@@ -338,13 +343,16 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
       <button class="btn on" id="tglLanes"></button>
       <button class="btn ico" id="theme"></button>
       <button class="btn" id="lang"></button>
-      <div id="results">
-        <div id="rhead"><span id="rcount"></span><span id="rmore"></span></div>
-        <div id="rlist"></div>
-        <div id="rempty" hidden></div>
-      </div>
     </div>
   </header>
+
+  <!-- poza naglowkiem celowo: naglowek jest elementem flex z z-index, wiec tworzy
+       kontekst ukladania i wszystko w srodku zostawaloby pod panelem wydania -->
+  <div id="results">
+    <div id="rhead"><span id="rcount"></span><span id="rmore"></span></div>
+    <div id="rlist"></div>
+    <div id="rempty" hidden></div>
+  </div>
 
   <div id="scroller">
     <div id="track">
@@ -699,6 +707,7 @@ function openPanel(i, keepScroll) {
   }).join("");
   $("#pbody").scrollTop = przed;
   $("#panel").classList.add("open");
+  ustawWyniki();
 }
 
 /* podświetlenie: szukamy w znormalizowanym tekście, podmieniamy w wyrenderowanym */
@@ -721,6 +730,7 @@ $("#pclose").onclick = () => {
   $("#panel").classList.remove("open");
   document.querySelectorAll(".col.sel").forEach(c => c.classList.remove("sel"));
   sel = -1;
+  ustawWyniki();
 };
 $("#rowBars").addEventListener("click", e => { const c = e.target.closest(".col"); if (c) openPanel(+c.dataset.i); });
 $("#rowMile").addEventListener("click", e => { const c = e.target.closest(".mcard"); if (c) { openPanel(+c.dataset.i); centerOn(+c.dataset.i); } });
@@ -748,6 +758,14 @@ $("#rowBars").addEventListener("mouseleave", () => tip.classList.remove("on"));
 /* ---------- wyszukiwanie ---------- */
 const MAXRES = 400, SNIP = 130;
 let hits = [], hitRel = [], hitAt = -1;
+
+/* lista wynikow jest fixed, wiec jej gora i bok musza nadazac za naglowkiem
+   i za panelem wydania */
+function ustawWyniki() {
+  const box = $("#results");
+  box.style.top = Math.round($("#hd").getBoundingClientRect().bottom + 6) + "px";
+  box.classList.toggle("obok", $("#panel").classList.contains("open"));
+}
 
 function markHits() {
   document.querySelectorAll(".col.hit").forEach(c => c.classList.remove("hit"));
@@ -853,7 +871,8 @@ $("#rlist").addEventListener("click", e => {
   if (row) selectRes(+row.dataset.k);
 });
 document.addEventListener("click", e => {
-  if (!e.target.closest(".hd-tools")) $("#results").classList.remove("open");
+  if (!e.target.closest(".hd-tools") && !e.target.closest("#results"))
+    $("#results").classList.remove("open");
 });
 
 /* ---------- przełączniki języka i motywu ---------- */
@@ -1029,7 +1048,8 @@ function layout() {
 
 /* ---------- start ---------- */
 $("#track").style.width = W + "px";
-addEventListener("resize", () => { layout(); drawMini(); syncWin(); });
+addEventListener("resize", () => { layout(); drawMini(); syncWin(); ustawWyniki(); });
 renderAll();
+ustawWyniki();
 setTimeout(() => { const h = $("#hint"); if (h) { h.style.opacity = 0; setTimeout(() => h.remove(), 500); } }, 9000);
 </script>
