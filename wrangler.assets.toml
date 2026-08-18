@@ -1,0 +1,15 @@
+# Worker z plikami strony. Bez tras: wolany tylko przez wiazanie uslugowe
+# z Workera `claude-code`, ktory stoi na sciezce /claude-code/.
+name = "claude-code-assets"
+main = "worker-assets/index.js"
+compatibility_date = "2026-08-18"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# nie wystawiamy tego Workera pod adresem *.workers.dev
+workers_dev = false
+
+[observability]
+enabled = true

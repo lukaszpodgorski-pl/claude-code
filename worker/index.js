@@ -1,9 +1,11 @@
 /**
- * Serwuje zawartosc public/ pod sciezka /claude-code/ na lukaszpodgorski.pl.
+ * Serwuje strone pod sciezka /claude-code/ na lukaszpodgorski.pl.
  *
- * Pages przypina sie do calej nazwy hosta, a nie do podkatalogu, dlatego strona
- * stoi na Workerze ze statycznymi zasobami: trasa lapie /claude-code/*,
- * prefiks jest zdejmowany, reszta idzie prosto do zasobow.
+ * Ten Worker nie ma zadnych plikow. Cloudflare nie pozwala kierowac Workera ze
+ * statycznymi zasobami na trase zawierajaca sciezke (tylko na cala nazwe hosta),
+ * a strona ma stac pod /claude-code/ na domenie, ktorej korzen obsluguje PHP.
+ * Dlatego pliki trzyma osobny Worker `claude-code-assets`, wolany tutaj przez
+ * wiazanie uslugowe SITE. Ruch nie wychodzi przy tym poza siec Cloudflare.
  */
 const PREFIX = "/claude-code";
 
@@ -21,7 +23,7 @@ export default {
       : url.pathname;
 
     const cel = new URL(sciezka + url.search, url.origin);
-    const odp = await env.ASSETS.fetch(new Request(cel, request));
+    const odp = await env.SITE.fetch(new Request(cel, request));
 
     // zasoby przekierowuja wzgledem sciezki BEZ prefiksu (np. /timeline ->
     // /timeline/), wiec trzeba go doklejac z powrotem, inaczej uzytkownik

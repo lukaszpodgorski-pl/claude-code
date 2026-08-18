@@ -1,13 +1,15 @@
+# Worker stojacy na sciezce /claude-code/ na istniejacej domenie.
+# Sam nie ma zadnych plikow: pyta o nie Workera `claude-code-assets` przez
+# wiazanie uslugowe. Powod podzialu: Cloudflare nie pozwala kierowac Workera
+# ze statycznymi zasobami na trase zawierajaca sciezke (tylko na cala nazwe hosta).
 name = "claude-code"
 main = "worker/index.js"
 compatibility_date = "2026-08-18"
 
-# statyczne zasoby serwowane przez Workera; katalog public/ to cale wyjscie budowy
-[assets]
-directory = "./public"
-binding = "ASSETS"
+[[services]]
+binding = "SITE"
+service = "claude-code-assets"
 
-# Strona zyje pod sciezka na istniejacej domenie, nie pod wlasna nazwa hosta.
 # Dwie trasy, bo wzorzec z /* nie lapie adresu bez ukosnika na koncu:
 # /claude-code poszloby na stary origin i skonczylo sie jego 404.
 [[routes]]

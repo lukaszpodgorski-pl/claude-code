@@ -1,4 +1,4 @@
-# Claude Code — oś czasu wydań
+# Claude Code - oś czasu wydań
 
 Interaktywna, przewijana w poziomie mapa całej historii Claude Code: **366 wydań,
 4489 zmian, 43 kamienie milowe**, od `0.2.21` (3 marca 2025) do dziś.
@@ -13,24 +13,24 @@ po obu wersjach językowych naraz. Cały changelog jest przetłumaczony na polsk
 | Co | Źródło |
 |---|---|
 | treść changelogu | `raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md` |
-| daty wydań | rejestr npm — `registry.npmjs.org/@anthropic-ai/claude-code` |
+| daty wydań | rejestr npm - `registry.npmjs.org/@anthropic-ai/claude-code` |
 | tłumaczenie na polski | Claude Code w trybie headless, wsadami po 40 wpisów |
 
 Changelog nie zawiera dat, dlatego doklejane są daty publikacji paczek z npm.
-Osiem wersji (m.in. `0.2.21`, `1.0.97`, `2.1.43`) nigdy nie trafiło do rejestru —
+Osiem wersji (m.in. `0.2.21`, `1.0.97`, `2.1.43`) nigdy nie trafiło do rejestru -
 ich daty są interpolowane z sąsiednich wydań i oznaczone w panelu jako „data szacowana".
 
 ## Jak czytać
 
-- **Pas kamieni milowych** (góra) — karty z ikoną flagi. Kolor lewej krawędzi = kategoria.
+- **Pas kamieni milowych** (góra) - karty z ikoną flagi. Kolor lewej krawędzi = kategoria.
   Najedź, żeby rozwinąć pełny opis; kliknij, żeby otworzyć panel wydania.
-- **Słupki** (środek) — jedno wydanie = jeden słupek. Wysokość to liczba zmian,
+- **Słupki** (środek) - jedno wydanie = jeden słupek. Wysokość to liczba zmian,
   segmenty to kategorie. Jasność segmentu koduje rodzaj zmiany:
   pełna = nowość, przygaszona = ulepszenie, ciemna = poprawka.
-- **Pasy kategorii** (dół) — gęstość zmian w danej kategorii w czasie.
-- **Tło** — cztery ery: `0.2.x` research preview, `1.0.x` GA, `2.0.x`, `2.1.x`.
+- **Pasy kategorii** (dół) - gęstość zmian w danej kategorii w czasie.
+- **Tło** - cztery ery: `0.2.x` research preview, `1.0.x` GA, `2.0.x`, `2.1.x`.
 
-Skala wysokości słupków odnosi się do 92. percentyla liczby zmian, nie do maksimum —
+Skala wysokości słupków odnosi się do 92. percentyla liczby zmian, nie do maksimum -
 inaczej `2.1.0` (90 wpisów) spłaszczyłoby wszystkie pozostałe wydania.
 
 ## Sterowanie
@@ -69,7 +69,9 @@ python -m pytest tests -q      # testy
 | `src/milestones.py` | kuratorowana lista 43 kamieni milowych i 4 er, dwujęzyczna |
 | `src/i18n.py` | teksty interfejsu i etykiety kategorii w obu językach |
 | `src/template.html` | szablon strony (CSS + JS), znacznik `/*__DATA__*/` na dane |
-| `public/` | to, co serwuje Cloudflare Pages |
+| `public/` | wyjście budowy, to serwuje Worker `claude-code-assets` |
+| `worker/index.js` | Worker na ścieżce `/claude-code/` |
+| `worker-assets/index.js` | Worker trzymający pliki |
 
 ## Kategorie
 
@@ -78,22 +80,34 @@ Każda zmiana trafia do jednej z 12 kategorii przez uporządkowaną listę regu�
 (`API`, `network`, `retry`) stoją **za** dziedzinowymi, żeby nie podkradać wpisów
 o MCP, modelach czy uprawnieniach. Do kategorii „Pozostałe" wpada ok. 5% zmian.
 
-Kamienie milowe nie są wykrywane automatycznie — to ręcznie wybrana lista
+Kamienie milowe nie są wykrywane automatycznie - to ręcznie wybrana lista
 zakotwiczona w konkretnych wersjach, zweryfikowana przez wyszukanie pierwszego
 wystąpienia danej funkcji w changelogu.
 
 ## Wdrożenie na Cloudflare
 
-Strona stoi na **Workerze ze statycznymi zasobami**, nie na Pages. Powód: Pages
-przypina się do całej nazwy hosta, a ta strona ma żyć pod ścieżką
-`/claude-code/` na istniejącej domenie, której korzeń obsługuje co innego.
-Worker przechwytuje tylko dwie trasy, reszta domeny idzie na stary origin bez zmian.
+Strona stoi na **dwóch Workerach**, nie na Pages. Powód jest dwustopniowy:
+Pages przypina się do całej nazwy hosta, a nie do podkatalogu; Worker ze
+statycznymi zasobami też nie może stać na trasie zawierającej ścieżkę
+(„Workers which have static assets cannot be routed on a URL which has a path
+component"). Strona ma zaś żyć pod `/claude-code/` na domenie, której korzeń
+obsługuje co innego.
 
-Pierwsze wdrożenie, raz:
+| Worker | Rola | Trasy |
+|---|---|---|
+| `claude-code-assets` | trzyma pliki z `public/` | brak, wołany tylko przez wiązanie usługowe |
+| `claude-code` | zdejmuje prefiks `/claude-code`, pyta pierwszego, poprawia nagłówek `Location` | `lukaszpodgorski.pl/claude-code` i `/claude-code/*` |
+
+Ruch między nimi nie wychodzi poza sieć Cloudflare. Reszta domeny idzie na stary
+origin bez zmian.
+
+Pierwsze wdrożenie, raz. Kolejność jest istotna, bo drugi Worker ma wiązanie do
+pierwszego:
 
 ```powershell
-npx wrangler login     # logowanie do konta Cloudflare z tą domeną
-npx wrangler deploy    # tworzy Workera, wysyła public/ i rejestruje trasy
+npx wrangler login
+npx wrangler deploy -c wrangler.assets.toml
+npx wrangler deploy
 ```
 
 Kolejne wdrożenia robi GitHub Actions przy każdym pushu do `main`
@@ -117,7 +131,7 @@ proxowany przez Cloudflare (pomarańczowa chmurka).
 
 Strona odświeża się sama. Zadanie `claude_code_timeline` w kontenerze `automation`
 raz dziennie pobiera changelog, tłumaczy nowe wpisy, przebudowuje stronę i wypycha
-commit do tego repozytorium; Cloudflare Pages wdraża go automatycznie.
+commit do tego repozytorium; GitHub Actions wdraża go na Cloudflare automatycznie.
 Bez nowych wydań zadanie kończy się bez commita.
 
 ---
@@ -130,6 +144,6 @@ are available in both Polish and English; light and dark themes; full-text searc
 that matches across both languages at once.
 
 The site updates itself: a daily job fetches the changelog, translates new entries,
-rebuilds the page and pushes a commit, which Cloudflare Pages deploys.
+rebuilds the page and pushes a commit, which GitHub Actions deploys to Cloudflare.
 
 Data belongs to Anthropic; this repository only reorganises and translates it.
