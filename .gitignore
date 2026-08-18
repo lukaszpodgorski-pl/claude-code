@@ -5,3 +5,4 @@ logs/
 .env
 src/data/releases.json
 build/
+docs/
