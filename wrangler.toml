@@ -1,0 +1,16 @@
+name = "claude-code"
+main = "worker/index.js"
+compatibility_date = "2026-08-18"
+
+# statyczne zasoby serwowane przez Workera; katalog public/ to cale wyjscie budowy
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# strona zyje pod sciezka na istniejacej domenie, nie pod wlasna nazwa hosta
+[[routes]]
+pattern = "lukaszpodgorski.pl/claude-code/*"
+zone_name = "lukaszpodgorski.pl"
+
+[observability]
+enabled = true
