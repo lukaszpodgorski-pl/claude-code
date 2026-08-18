@@ -119,6 +119,8 @@ body{
 #hd{flex:none;display:flex;align-items:center;gap:18px;padding:10px 18px 9px;
     border-bottom:1px solid var(--line);background:var(--hd-bg);backdrop-filter:blur(14px);z-index:40}
 .hd-brand{display:flex;align-items:center;gap:11px;flex:none}
+a.hd-brand{text-decoration:none;color:inherit;transition:opacity .14s}
+a.hd-brand:hover{opacity:.78}
 .mark{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:8px;
   background:linear-gradient(150deg,var(--accent),#8f4a33);box-shadow:0 3px 14px rgba(192,92,54,.34)}
 .mark svg{width:17px;height:17px;fill:#fff}
@@ -319,19 +321,83 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
   color:var(--dim);background:var(--tip-bg);border:1px solid var(--line2);border-radius:999px;
   padding:6px 16px;box-shadow:var(--shadow);transition:opacity .4s}
 #hint kbd{font-family:var(--mono);font-size:10px;background:var(--code-bg);border-radius:4px;padding:1px 5px;margin:0 1px}
+/* ---------- tabela changelogu ---------- */
+/* z-index ponad panelem wydania (80) i lista wynikow (85): naklada sie na calosc */
+#tblWrap{position:fixed;inset:0;z-index:95;background:var(--bg);display:flex;flex-direction:column}
+#tblWrap[hidden]{display:none}
+#tblHd{flex:none;display:flex;align-items:center;gap:10px;padding:10px 18px;
+  border-bottom:1px solid var(--line);background:var(--hd-bg);backdrop-filter:blur(14px)}
+#tblTitle{font-size:14px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+#tq{width:min(320px,38vw);padding:6px 10px;border-radius:8px;border:1px solid var(--line2);
+  background:var(--surface);color:var(--txt);font-size:12px;font-family:var(--font);outline:none}
+#tq:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+#tq::placeholder{color:var(--dim2)}
+#tsel{max-width:210px;padding:6px 8px;border-radius:8px;border:1px solid var(--line2);
+  background:var(--surface);color:var(--dim);font-size:12px;font-family:var(--font);
+  outline:none;cursor:pointer}
+#tcount{margin-left:auto;font-size:11px;color:var(--dim);font-family:var(--mono);white-space:nowrap}
+#tlang{flex:none;font-family:var(--mono);font-weight:600;letter-spacing:.03em;min-width:34px}
+#tclose{flex:none;width:28px;height:28px;border-radius:7px;border:1px solid var(--line2);
+  background:var(--hover);color:var(--dim);cursor:pointer;font-size:14px;line-height:1}
+#tclose:hover{color:var(--txt);background:var(--hover2)}
+#tblBody{flex:1 1 auto;overflow:auto;scrollbar-color:var(--scroll) transparent}
+#tblBody::-webkit-scrollbar{width:11px;height:11px}
+#tblBody::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+#tbl{width:100%;border-collapse:collapse;font-size:12.4px;line-height:1.5}
+#tbl th{position:sticky;top:0;z-index:2;background:var(--bg2);text-align:left;font-weight:600;
+  font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);
+  padding:8px 12px;border-bottom:1px solid var(--line2);white-space:nowrap}
+#tbl td{padding:6px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+#tbl tbody tr{cursor:pointer}
+#tbl tbody tr:hover td{background:var(--hover)}
+/* kreska grubsza tam, gdzie zaczyna sie kolejne wydanie */
+#tbl tr.nr td{border-top:1px solid var(--line2)}
+.tv{font-family:var(--mono);font-size:11px;white-space:nowrap}
+.tdt{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap}
+.ttop{font-size:11px;color:var(--dim);white-space:nowrap}
+.ttop b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.kdt{display:inline-block;font-size:9px;text-transform:uppercase;letter-spacing:.06em;
+  padding:1px 5px;border-radius:4px;font-weight:600;white-space:nowrap}
+.tch{color:var(--ent-txt);word-break:break-word;min-width:min(46vw,560px)}
+.tch mark{background:var(--mark-bg);color:var(--mark-fg);border-radius:2px;padding:0 1px}
+.tch code{font-family:var(--mono);font-size:11px;background:var(--code-bg);padding:0 3px;border-radius:3px}
+.tch a{color:var(--accent-txt);text-decoration:none}
+.tch a:hover{text-decoration:underline}
+#tsent{height:1px}
+#tempty{padding:26px 12px;text-align:center;font-size:12.5px;color:var(--dim)}
+/* na telefonie piec kolumn sie nie miesci i tresc zmiany uciekala poza ekran,
+   wiec wiersz przestaje byc wierszem tabeli: wersja, data i rodzaj w jednej
+   linii, kategoria w drugiej, tresc pod spodem */
+@media (max-width:700px){
+  #tbl thead{display:none}
+  #tbl,#tbl tbody,#tbl tr,#tbl td{display:block}
+  #tbl tbody tr{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 9px;padding:9px 14px;
+    border-bottom:1px solid var(--line)}
+  #tbl td{border:0;padding:0}
+  .tv{order:1}
+  .tdt{order:2}
+  .tk{order:3}
+  .ttop{order:4;flex:1 1 100%;margin-top:3px}
+  .tch{order:5;flex:1 1 100%;min-width:0;margin-top:3px}
+  #tblHd{flex-wrap:wrap;gap:8px 10px}
+  #tq{flex:1 1 100%;width:auto}
+}
+
 @media (max-width:1180px){#legend{display:none}}
-@media (max-width:820px){#q{width:130px}#sub{display:none}}
+@media (max-width:820px){#q{width:130px}#sub{display:none}#tblTitle{display:none}#tsel{max-width:132px}
+  #hd{flex-wrap:wrap;gap:8px 12px}
+  .hd-tools{flex:1 1 100%;flex-wrap:wrap;justify-content:flex-end}}
 </style>
 
 <div id="app">
   <header id="hd">
-    <div class="hd-brand">
+    <a class="hd-brand" id="home" href="https://lukaszpodgorski.pl">
       <div class="mark"><svg viewBox="0 0 24 24"><path d="M5 3v18h2v-7.2l11-3.3-11-3.3V3z"/></svg></div>
       <div>
         <h1 id="h1"></h1>
         <p id="sub"></p>
       </div>
-    </div>
+    </a>
     <div id="legend"></div>
     <div class="hd-tools">
       <div id="qwrap">
@@ -341,6 +407,7 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
       <button class="btn" id="prevM">◀</button>
       <button class="btn" id="nextM"></button>
       <button class="btn on" id="tglLanes"></button>
+      <button class="btn" id="tglTable"></button>
       <button class="btn ico" id="theme"></button>
       <button class="btn" id="lang"></button>
     </div>
@@ -378,6 +445,25 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
     <div id="pbody"></div>
   </aside>
 
+  <div id="tblWrap" hidden>
+    <div id="tblHd">
+      <strong id="tblTitle"></strong>
+      <input id="tq" autocomplete="off" spellcheck="false">
+      <select id="tsel"></select>
+      <span id="tcount"></span>
+      <button id="tlang" class="btn"></button>
+      <button id="tclose">✕</button>
+    </div>
+    <div id="tblBody">
+      <table id="tbl">
+        <thead><tr><th id="thV"></th><th id="thD"></th><th id="thT"></th><th id="thK"></th><th id="thC"></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="tsent"></div>
+      <div id="tempty" hidden></div>
+    </div>
+  </div>
+
   <div id="tip"></div>
   <div id="hint"></div>
 </div>
@@ -387,6 +473,11 @@ const DATA = /*__DATA__*/;
 const T = DATA.topics, R = DATA.releases, M = DATA.milestones, E = DATA.eras;
 const SLOT = 40, PAD = 90;
 const W = PAD * 2 + (R.length - 1) * SLOT;
+// ogon z prawej: karta kamienia milowego ma 238px i zaczyna sie przy swoim wydaniu,
+// wiec karta ostatniego wydania wystawalaby poza obszar przewijania. Bez ogona
+// widac to od razu, bo wejscie na strone zaczyna sie wlasnie na koncu osi.
+const TAIL = 160;
+const WFULL = W + TAIL;
 
 const $ = s => document.querySelector(s);
 const x = i => PAD + i * SLOT;
@@ -495,7 +586,8 @@ function renderEras() {
   const tints = [cssVar("--era1"), cssVar("--era2"), cssVar("--era3"), cssVar("--era4")];
   const tags = [cssVar("--erat1"), cssVar("--erat2"), cssVar("--erat3"), cssVar("--erat4")];
   E.forEach((e, k) => {
-    const l = x(e.from) - SLOT / 2, w = x(e.to) - x(e.from) + SLOT;
+    const ostatnia = k === E.length - 1;
+    const l = x(e.from) - SLOT / 2, w = x(e.to) - x(e.from) + SLOT + (ostatnia ? TAIL : 0);
     eb += `<div class="eraFill" style="left:${l}px;width:${w}px;background:linear-gradient(180deg,${tints[k % 4]},transparent 55%)"></div>`;
     et += `<div class="eraTag" style="left:${l + 8}px;width:${Math.max(160, w - 16)}px;background:${tags[k % 4]}">
              <span>${esc(e.name[LANG])} <i>· ${esc(e.sub[LANG])}</i></span></div>`;
@@ -610,6 +702,8 @@ function renderChrome() {
   $("#pclose").title = U.close;
   $("#lang").textContent = U.langBtn;
   $("#lang").title = U.langTitle;
+  $("#home").title = U.homeTitle;
+  tblChrome();
 
   const nazwa = THEME === "auto" ? U.themeAuto : THEME === "light" ? U.themeLight : U.themeDark;
   $("#theme").title = fill(U.themeTitle, { v: nazwa });
@@ -653,6 +747,8 @@ function applyFilter() {
     c.classList.toggle("solo", solo !== null && +c.dataset.t === solo);
     c.classList.toggle("off", solo !== null && +c.dataset.t !== solo);
   });
+  $("#tsel").value = solo === null ? "" : String(solo);
+  if (tblOtwarta()) tblFilter();
   drawMini();
 }
 $("#legend").addEventListener("click", e => {
@@ -876,13 +972,14 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- przełączniki języka i motywu ---------- */
-$("#lang").onclick = () => {
+function przelaczJezyk() {
   LANG = LANG === "pl" ? "en" : "pl";
   U = DATA.ui[LANG];
   localStorage.setItem(LS_LANG, LANG);
-  renderAll();
+  renderAll();                          // renderAll odswieza tez tabele, gdy jest otwarta
   if ($("#q").value.trim().length >= 2) runSearch();
-};
+}
+$("#lang").onclick = przelaczJezyk;
 $("#theme").onclick = () => {
   THEME = THEMES[(THEMES.indexOf(THEME) + 1) % THEMES.length];
   localStorage.setItem(LS_THEME, THEME);
@@ -955,18 +1052,157 @@ addEventListener("mousemove", e => {
 addEventListener("mouseup", () => { if (drag) { sc.classList.remove("grabbing"); drag = null; } });
 
 addEventListener("keydown", e => {
-  if (e.target.tagName === "INPUT") return;
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
   const k = e.key;
+  // przy otwartej tabeli oś czasu pod spodem nie reaguje na klawisze
+  if (tblOtwarta()) {
+    if (k === "Escape" || k === "t" || k === "T") { tblClose(); e.preventDefault(); }
+    return;
+  }
   if (k === "ArrowRight") { sc.scrollLeft += SLOT * 3; e.preventDefault(); }
   else if (k === "ArrowLeft") { sc.scrollLeft -= SLOT * 3; e.preventDefault(); }
   else if (k === "PageDown") { sc.scrollLeft += sc.clientWidth * .9; e.preventDefault(); }
   else if (k === "PageUp") { sc.scrollLeft -= sc.clientWidth * .9; e.preventDefault(); }
   else if (k === "Home") { smoothTo(0); e.preventDefault(); }
-  else if (k === "End") { smoothTo(W); e.preventDefault(); }
+  else if (k === "End") { smoothTo(WFULL); e.preventDefault(); }
   else if (k === "n" || k === "N") gotoMile(1);
   else if (k === "m" || k === "M") gotoMile(-1);
   else if (k === "Escape") $("#pclose").click();
+  else if (k === "t" || k === "T") { tblOpen(); e.preventDefault(); }
   else if (k === "/") { $("#q").focus(); e.preventDefault(); }
+});
+
+/* ---------- tabela changelogu ---------- */
+// kolejność wierszy nie zależy ani od języka, ani od filtrów, więc liczymy ją raz:
+// wydania od najnowszego, wewnątrz wydania tak samo jak w panelu wydania
+const TROWS = [];
+for (let i = R.length - 1; i >= 0; i--) {
+  R[i][3].map((e, k) => [e, k])
+    .sort((a, b) => a[0][0] - b[0][0] || b[0][1] - a[0][1])
+    .forEach(([, k]) => TROWS.push([i, k]));
+}
+// znormalizowane teksty bierzemy z gotowego indeksu wyszukiwania, żeby nie
+// normalizować 4,5 tys. wpisów przy każdym naciśnięciu klawisza
+const TNORM = R.map(r => r[3].map(() => null));
+IDX.forEach(it => { TNORM[it.i][it.j] = it; });
+
+const TCHUNK = 300;
+let tFilt = [], tShown = 0, tQ = "";
+const tblOtwarta = () => !$("#tblWrap").hidden;
+
+function tblChrome() {
+  $("#tglTable").textContent = U.tableBtn;
+  $("#tglTable").title = U.tableTitle;
+  $("#tblTitle").textContent = U.tableHead;
+  $("#tclose").title = U.close;
+  const tq = $("#tq");
+  tq.placeholder = U.searchPlaceholder;
+  tq.setAttribute("aria-label", U.searchAria);
+  $("#thV").textContent = U.colVersion;
+  $("#thD").textContent = U.colDate;
+  $("#thT").textContent = U.colTopic;
+  $("#thK").textContent = U.colKind;
+  $("#thC").textContent = U.colChange;
+  $("#tlang").textContent = U.langBtn;
+  $("#tlang").title = U.langTitle;
+  $("#tsel").innerHTML = `<option value="">${esc(U.allTopics)}</option>`
+    + T.map((t, i) => `<option value="${i}">${esc(tlabel(i))}</option>`).join("");
+  $("#tsel").value = solo === null ? "" : String(solo);
+}
+
+function tblRow([i, k], n) {
+  const r = R[i], e = r[3][k];
+  const pierwszy = n === 0 || tFilt[n - 1][0] !== i;   // pierwszy wiersz wydania
+  let surowy = entText(e);
+  let jezyk = (LANG === "pl" && e[3]) ? "pl" : "en";
+  // tak jak w panelu: gdy fraza trafiła w drugim języku, pokazujemy ten drugi
+  if (tQ && norm(surowy).indexOf(tQ) < 0) {
+    const alt = jezyk === "pl" ? e[2] : e[3];
+    if (alt && norm(alt).indexOf(tQ) >= 0) { surowy = alt; jezyk = jezyk === "pl" ? "en" : "pl"; }
+  }
+  let tx = mdlite(surowy);
+  if (tQ) tx = hl(tx, surowy, tQ);
+  const powod = entIsOriginal(e) ? U.untranslated : U.matchedIn;
+  const znacznik = jezyk !== LANG
+    ? `<span class="uno" title="${esc(powod)}">${jezyk.toUpperCase()}</span>` : "";
+  return `<tr class="trow${pierwszy ? " nr" : ""}" data-i="${i}">
+    <td class="tv">${esc(r[0])}</td>
+    <td class="tdt">${fmtDate(r[1])}</td>
+    <td class="ttop"><b style="background:${tc(e[0])}"></b>${esc(tlabel(e[0]))}</td>
+    <td class="tk"><span class="kdt k${e[1]}">${esc(U.kinds[e[1]])}</span></td>
+    <td class="tch">${znacznik}${tx}</td></tr>`;
+}
+
+// 4,5 tys. wierszy naraz to ok. 25 tys. węzłów DOM, więc dokładamy porcjami
+function tblWiecej() {
+  const koniec = Math.min(tFilt.length, tShown + TCHUNK);
+  if (koniec === tShown) return;
+  let html = "";
+  for (let n = tShown; n < koniec; n++) html += tblRow(tFilt[n], n);
+  $("#tbody").insertAdjacentHTML("beforeend", html);
+  tShown = koniec;
+  $("#tsent").hidden = tShown >= tFilt.length;
+}
+
+function tblFilter() {
+  const q = norm($("#tq").value.trim());
+  tQ = q.length >= 2 ? q : "";
+  tFilt = TROWS.filter(([i, k]) => {
+    if (solo !== null && R[i][3][k][0] !== solo) return false;
+    if (!tQ) return true;
+    const it = TNORM[i][k];
+    return it.en.indexOf(tQ) >= 0 || (it.pl !== "" && it.pl.indexOf(tQ) >= 0);
+  });
+  $("#tbody").innerHTML = "";
+  tShown = 0;
+  $("#tblBody").scrollTop = 0;
+  $("#tcount").textContent = tFilt.length
+    ? tFilt.length + " " + plural(tFilt.length, U.changes) : U.noHits;
+  $("#tempty").hidden = tFilt.length > 0;
+  $("#tempty").textContent = U.noHits;
+  tblWiecej();
+}
+
+function tblOpen() {
+  $("#tblWrap").hidden = false;
+  $("#tglTable").classList.add("on");
+  $("#tq").value = $("#q").value;
+  tblFilter();
+  $("#tq").focus();
+}
+function tblClose() {
+  $("#tblWrap").hidden = true;
+  $("#tglTable").classList.remove("on");
+  $("#tbody").innerHTML = "";     // wiersze nie mają po co wisieć w DOM po zamknięciu
+  tShown = 0;
+}
+$("#tglTable").onclick = () => (tblOtwarta() ? tblClose() : tblOpen());
+$("#tclose").onclick = tblClose;
+$("#tlang").onclick = przelaczJezyk;
+
+new IntersectionObserver(w => { if (w.some(v => v.isIntersecting)) tblWiecej(); },
+  { root: $("#tblBody"), rootMargin: "600px" }).observe($("#tsent"));
+
+let tTimer = 0;
+$("#tq").addEventListener("input", () => {
+  clearTimeout(tTimer);
+  tTimer = setTimeout(tblFilter, 130);
+});
+$("#tq").addEventListener("keydown", e => {
+  if (e.key === "Escape") { e.stopPropagation(); tblClose(); }
+});
+$("#tsel").addEventListener("change", e => {
+  solo = e.target.value === "" ? null : +e.target.value;
+  applyFilter();                                   // applyFilter przefiltruje też tabelę
+});
+$("#tbody").addEventListener("click", e => {
+  if (e.target.closest("a")) return;               // link w treści zmiany ma działać
+  const tr = e.target.closest(".trow");
+  if (!tr) return;
+  const i = +tr.dataset.i;
+  tblClose();
+  centerOn(i);
+  openPanel(i);
 });
 
 /* ---------- minimapa ---------- */
@@ -1000,7 +1236,7 @@ function drawMini() {
 }
 function syncWin() {
   const w = mc.clientWidth;
-  const l = sc.scrollLeft / W * w, ww = sc.clientWidth / W * w;
+  const l = sc.scrollLeft / WFULL * w, ww = sc.clientWidth / WFULL * w;
   const mw = $("#miniWin");
   mw.style.left = l + "px"; mw.style.width = Math.max(10, ww) + "px";
 }
@@ -1010,7 +1246,7 @@ function miniJump(e) {
   cancelAnimationFrame(animRAF);
   const rect = mc.getBoundingClientRect();
   const p = (e.clientX - rect.left) / rect.width;
-  sc.scrollLeft = p * W - sc.clientWidth / 2;
+  sc.scrollLeft = p * WFULL - sc.clientWidth / 2;
 }
 $("#mini").addEventListener("mousedown", e => { mdrag = true; miniJump(e); });
 addEventListener("mousemove", e => { if (mdrag) miniJump(e); });
@@ -1047,9 +1283,13 @@ function layout() {
 }
 
 /* ---------- start ---------- */
-$("#track").style.width = W + "px";
+$("#track").style.width = WFULL + "px";
 addEventListener("resize", () => { layout(); drawMini(); syncWin(); ustawWyniki(); });
 renderAll();
 ustawWyniki();
+// wejście pokazuje najnowsze wydania: skok bez animacji, zanim użytkownik zdąży
+// spojrzeć. Home wraca na początek osi, End znów na koniec.
+sc.scrollLeft = sc.scrollWidth;
+syncWin();
 setTimeout(() => { const h = $("#hint"); if (h) { h.style.opacity = 0; setTimeout(() => h.remove(), 500); } }, 9000);
 </script>

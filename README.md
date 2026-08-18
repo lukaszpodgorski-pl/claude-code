@@ -1,7 +1,7 @@
 # Claude Code - oś czasu wydań
 
-Interaktywna, przewijana w poziomie mapa całej historii Claude Code: **366 wydań,
-4489 zmian, 43 kamienie milowe**, od `0.2.21` (3 marca 2025) do dziś.
+Interaktywna, przewijana w poziomie mapa całej historii Claude Code: **367 wydań,
+4508 zmian, 43 kamienie milowe**, od `0.2.21` (3 marca 2025) do dziś.
 
 Strona: **https://lukaszpodgorski.pl/claude-code/timeline**
 
@@ -29,6 +29,12 @@ ich daty są interpolowane z sąsiednich wydań i oznaczone w panelu jako „dat
   pełna = nowość, przygaszona = ulepszenie, ciemna = poprawka.
 - **Pasy kategorii** (dół) - gęstość zmian w danej kategorii w czasie.
 - **Tło** - cztery ery: `0.2.x` research preview, `1.0.x` GA, `2.0.x`, `2.1.x`.
+- **Tabela** - przycisk „Tabela" w nagłówku otwiera cały changelog jako listę
+  zmian, od najnowszej: wersja, data, kategoria, rodzaj, treść. Filtr kategorii
+  i szukana fraza są wspólne z osią czasu, a kliknięcie w wiersz wraca na oś
+  i otwiera panel tego wydania. Na wąskim ekranie wiersz rozkłada się na trzy linie.
+
+Strona otwiera się na końcu osi, przy najnowszym wydaniu.
 
 Skala wysokości słupków odnosi się do 92. percentyla liczby zmian, nie do maksimum -
 inaczej `2.1.0` (90 wpisów) spłaszczyłoby wszystkie pozostałe wydania.
@@ -44,6 +50,8 @@ inaczej `2.1.0` (90 wpisów) spłaszczyłoby wszystkie pozostałe wydania.
 | filtr kategorii | kliknięcie w chip legendy (ponowne zdejmuje filtr) |
 | język, motyw | przyciski `PL`/`EN` i ikona motywu (auto → jasny → ciemny) |
 | szczegóły wydania | kliknięcie w słupek; `Esc` zamyka panel |
+| changelog w tabeli | przycisk „Tabela" albo `T`; `Esc` zamyka |
+| strona główna | kliknięcie w logo w lewym górnym rogu |
 
 Wybór języka i motywu zostaje w `localStorage`. Język można wymusić parametrem
 `?lang=en` albo `?lang=pl`.
