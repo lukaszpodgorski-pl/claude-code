@@ -97,6 +97,62 @@ def kind_of(text):
     return 2
 
 
+def _mnoga(n, a, b, c):
+    """Polska odmiana liczebnika: 1 zmiana, 2 zmiany, 5 zmian."""
+    m, h = n % 10, n % 100
+    return a if n == 1 else (b if 2 <= m <= 4 and not 12 <= h <= 14 else c)
+
+
+def _skroc(tekst, limit=150):
+    """Ucina na granicy słowa; zdejmuje znaczniki markdown, bo karta renderuje HTML."""
+    czysty = re.sub(r"[`*]", "", tekst).strip()
+    if len(czysty) <= limit:
+        return czysty
+    return czysty[:limit].rsplit(" ", 1)[0] + "…"
+
+
+def kamien_ostatniej_zmiany(releases, zajete_indeksy):
+    """Kamień milowy przypięty do ostatniego wydania, składany przy każdej budowie.
+
+    Wpis zakotwiczony na sztywno w konkretnej wersji („stan na dziś") jest
+    nieprawdziwy nazajutrz po kolejnym wydaniu, więc ten jeden musi powstawać
+    z danych. Gdy ostatnie wydanie ma już własny kamień z listy kuratorowanej,
+    nie dokładamy drugiej karty w to samo miejsce.
+    """
+    i = len(releases) - 1
+    if i < 0 or i in zajete_indeksy:
+        return None
+
+    wersja, _data, _dokladna, wpisy = releases[i]
+    ile = [0, 0, 0]
+    na_kategorie = {}
+    for topic, kind, _en, _pl in wpisy:
+        ile[kind] += 1
+        na_kategorie[topic] = na_kategorie.get(topic, 0) + 1
+    dominujaca = max(na_kategorie, key=lambda t: na_kategorie[t]) if na_kategorie else 0
+
+    n = len(wpisy)
+    opis_pl = ("Najnowsze wydanie w changelogu: %d %s, w tym %d %s, %d %s i %d %s."
+               % (n, _mnoga(n, "zmiana", "zmiany", "zmian"),
+                  ile[2], _mnoga(ile[2], "nowość", "nowości", "nowości"),
+                  ile[1], _mnoga(ile[1], "ulepszenie", "ulepszenia", "ulepszeń"),
+                  ile[0], _mnoga(ile[0], "poprawka", "poprawki", "poprawek")))
+    opis_en = ("The newest release in the changelog: %d change%s, of which %d new, "
+               "%d improved and %d fixed."
+               % (n, "" if n == 1 else "s", ile[2], ile[1], ile[0]))
+
+    # jedna konkretna nowość jako zajawka, żeby karta nie była samą statystyką
+    zajawka = next((e for e in wpisy if e[1] == 2), None)
+    if zajawka:
+        opis_pl += " Na przykład: %s" % _skroc(zajawka[3] or zajawka[2])
+        opis_en += " For example: %s" % _skroc(zajawka[2])
+
+    return {"i": i, "topic": TOPICS[dominujaca][0], "big": False,
+            "title": {"pl": "Ostatnia zmiana", "en": "Latest change"},
+            "desc": {"pl": opis_pl, "en": opis_en},
+            "auto": True, "version": wersja}
+
+
 def make_data(offline=False):
     """Skleja changelog, klasyfikację, tłumaczenia i teksty w jeden ładunek."""
     rel = load(offline=offline)
@@ -118,6 +174,9 @@ def make_data(offline=False):
         miles.append({"i": by_v[m["v"]], "topic": m["topic"], "big": bool(m["big"]),
                       "title": {"pl": m["title_pl"], "en": m["title_en"]},
                       "desc": {"pl": m["desc_pl"], "en": m["desc_en"]}})
+    ostatni = kamien_ostatniej_zmiany(releases, {m["i"] for m in miles})
+    if ostatni:
+        miles.append(ostatni)
     miles.sort(key=lambda m: m["i"])
 
     eras = []

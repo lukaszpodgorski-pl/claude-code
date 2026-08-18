@@ -230,12 +230,11 @@ MILESTONES = [
       "Claude Opus 5",
       "<code>claude-opus-5</code> zostaje domyślnym Opusem — 1M kontekstu, fast mode, 10/50 USD za Mtok.",
       "<code>claude-opus-5</code> becomes the default Opus: 1M context, fast mode, $10/$50 per Mtok."),
-    M("2.1.234", "core", False,
-      "Stan na dziś",
-      "Where things stand today",
-      "Najnowsze wydanie w changelogu: GitLab w statuslinie, automatyczne wznowienie po resecie limitu, kolejna warstwa hardeningu ścieżek na Windows.",
-      "The newest release in the changelog: GitLab in the statusline, automatic resume after a usage limit reset, another layer of path hardening on Windows."),
 ]
+
+# Ostatniego kamienia na osi — „Ostatnia zmiana" — tutaj nie ma i nie powinno być.
+# Generuje go `build.py` z faktycznie ostatniego wydania przy każdej budowie:
+# wpis zakotwiczony na sztywno w konkretnej wersji dezaktualizuje się następnego dnia.
 
 # Ery — prefiks wersji + nazwa i podpis w obu językach
 ERAS = [

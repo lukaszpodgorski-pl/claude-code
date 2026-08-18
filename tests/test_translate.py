@@ -88,3 +88,60 @@ def test_prompt_niesie_slownik_terminow_i_numeracje():
     assert "MCP" in p
     assert '"0"' in p or "0:" in p
     assert "Added MCP support" in p
+
+
+def test_wykrywa_okaleczona_polszczyzne():
+    assert translate.kaleka("Ulepszono obsluge bledow dla /install-github-app") is True
+    assert translate.kaleka("Zwiekszono domyslny interwal otel") is True
+    assert translate.kaleka("ktore podkresla bledy ortograficzne") is True
+    assert translate.kaleka("Ulepszono obsługę błędów dla /install-github-app") is False
+
+
+def test_poprawny_tekst_bez_ogonkow_nie_jest_alarmem():
+    """Polskie zdanie potrafi nie miec ani jednego ogonka i byc poprawne."""
+    assert translate.kaleka(
+        "Poprawiono otwieranie dodatkowych okien VS Code przy starcie w Windows") is False
+    assert translate.kaleka(
+        "Przeniesiono allowedTools i ignorePatterns z .claude.json do settings.json") is False
+    assert translate.kaleka("Dodano nowy tryb") is False
+    # slowa, ktore kusza, zeby wpisac je na liste, a sa poprawne bez ogonkow
+    assert translate.kaleka("Zmniejszono zużycie pamięci o 16 MB") is False
+    assert translate.kaleka("Poprawiono niepoprawny wynik") is False
+    assert translate.kaleka("podkreśla błędy ortograficzne") is False
+
+
+def test_kontrola_wsadu_lapie_pojedynczy_zepsuty_wpis():
+    assert translate.wsad_kaleki({"a": "Dodano nowy tryb", "b": "Ulepszono obsluge"}) is True
+    assert translate.wsad_kaleki({"a": "Dodano nowy tryb"}) is False
+    assert translate.wsad_kaleki({}) is False
+
+
+def test_okaleczony_wsad_jest_ponawiany(monkeypatch):
+    """Model potrafi oddac cala partie bez ogonkow; druga proba zwykle pomaga."""
+    proby = {"n": 0}
+    bez = "Poprawiono nieprawidlowe wyrownanie zagniezdzonych elementow listy w terminalu"
+    z = "Poprawiono nieprawidłowe wyrównanie zagnieżdżonych elementów listy w terminalu"
+
+    def kolejno(prompt, model, timeout):
+        proby["n"] += 1
+        return _odpowiedz({"0": bez if proby["n"] == 1 else z})
+
+    monkeypatch.setattr(translate, "_run_claude", kolejno)
+    wynik = translate.translate_batch(["Fixed nested list alignment"])
+    assert proby["n"] == 2
+    assert wynik["Fixed nested list alignment"] == z
+
+
+def test_gdy_obie_proby_okaleczone_bierzemy_co_jest(monkeypatch):
+    """Polszczyzna bez ogonkow jest gorsza niz poprawna, ale lepsza niz brak."""
+    bez = "Poprawiono nieprawidlowe wyrownanie zagniezdzonych elementow listy w terminalu"
+    monkeypatch.setattr(translate, "_run_claude",
+                        lambda prompt, model, timeout: _odpowiedz({"0": bez}))
+    wynik = translate.translate_batch(["Fixed nested list alignment"])
+    assert wynik["Fixed nested list alignment"] == bez
+
+
+def test_prompt_wymaga_znakow_diakrytycznych():
+    p = translate.build_prompt(["cokolwiek"])
+    assert "ą" in p and "ż" in p
+    assert "DIAKRYTYCZNYMI" in p

@@ -20,10 +20,27 @@ def dane():
     return build.make_data(offline=True)
 
 
-def test_liczby_zgadzaja_sie_ze_stanem_sprzed_przebudowy(dane):
-    """Rozdzielenie tekstu na EN i PL nie moze zgubic ani dolozyc wpisow."""
-    assert dane["meta"]["releases"] == 366
-    assert dane["meta"]["entries"] == 4489
+# Stan zmierzony 2026-08-18, gdy powstal rozdzial na EN i PL. Liczby moga tylko
+# rosnac: kazde nowe wydanie Claude Code je zwieksza, ale zaden refaktor nie ma
+# prawa ich zmniejszyc. Sztywna rownosc pekalaby przy kazdym wydaniu.
+BAZA_WYDAN = 366
+BAZA_WPISOW = 4489
+
+
+def test_nic_nie_ginie_wzgledem_stanu_sprzed_przebudowy(dane):
+    """Rozdzielenie tekstu na EN i PL nie moze zgubic wpisow ani wydan."""
+    assert dane["meta"]["releases"] >= BAZA_WYDAN
+    assert dane["meta"]["entries"] >= BAZA_WPISOW
+
+
+def test_liczby_w_meta_zgadzaja_sie_z_danymi(dane):
+    assert dane["meta"]["releases"] == len(dane["releases"])
+    assert dane["meta"]["entries"] == sum(len(r[3]) for r in dane["releases"])
+
+
+def test_zadne_wydanie_nie_jest_puste(dane):
+    puste = [r[0] for r in dane["releases"] if not r[3]]
+    assert puste == []
 
 
 def test_kazdy_wpis_ma_kategorie_rodzaj_i_dwa_teksty(dane):
@@ -76,6 +93,36 @@ def test_kamienie_wskazuja_istniejace_wydania_i_maja_oba_jezyki(dane):
         assert 0 <= m["i"] < n
         assert m["title"]["pl"] and m["title"]["en"]
         assert m["desc"]["pl"] and m["desc"]["en"]
+
+
+def test_ostatni_kamien_jest_przypiety_do_ostatniego_wydania(dane):
+    """„Ostatnia zmiana" ma sie generowac z danych, a nie z listy recznej."""
+    ostatni = dane["milestones"][-1]
+    assert ostatni["i"] == len(dane["releases"]) - 1
+    assert ostatni.get("auto") is True
+    assert ostatni["title"]["pl"] == "Ostatnia zmiana"
+    assert ostatni["title"]["en"] == "Latest change"
+    assert ostatni["version"] == dane["releases"][-1][0]
+
+
+def test_opis_ostatniego_kamienia_zgadza_sie_z_liczbami(dane):
+    ostatni = dane["milestones"][-1]
+    wpisy = dane["releases"][-1][3]
+    assert str(len(wpisy)) in ostatni["desc"]["pl"]
+    assert str(len(wpisy)) in ostatni["desc"]["en"]
+
+
+def test_zaden_kamien_nie_dubluje_indeksu(dane):
+    """Gdyby ostatnie wydanie mialo juz kamien z listy, auto-kamien ma sie nie dolozyc."""
+    indeksy = [m["i"] for m in dane["milestones"]]
+    assert len(indeksy) == len(set(indeksy))
+
+
+def test_auto_kamien_nie_powstaje_gdy_miejsce_zajete():
+    import build as b
+    releases = [["1.0.0", "2025-01-01", 1, [[0, 2, "a", "a"]]]]
+    assert b.kamien_ostatniej_zmiany(releases, set()) is not None
+    assert b.kamien_ostatniej_zmiany(releases, {0}) is None
 
 
 def test_ery_pokrywaja_cala_os_bez_dziur(dane):

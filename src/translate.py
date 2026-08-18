@@ -27,30 +27,54 @@ TIMEOUT = 300
 # Terminy, ktore w polskim tekscie technicznym funkcjonuja w oryginale albo maja
 # utarta forme. Bez tego kolejne wsady rozjezdzaja sie terminologicznie.
 GLOSSARY = """\
-- nie tlumacz nazw wlasnych i identyfikatorow: Claude Code, MCP, SDK, API, CLI,
-  Bedrock, Vertex, VS Code, JetBrains, nazw narzedzi (Bash, Grep, WebFetch),
+- PISZ POPRAWNĄ POLSZCZYZNĄ Z PEŁNYMI ZNAKAMI DIAKRYTYCZNYMI: ą, ć, ę, ł, ń, ó, ś, ź, ż.
+  Tekst bez ogonków („ktore podkresla bledy") jest błędem, a nie uproszczeniem.
+- nie tłumacz nazw własnych i identyfikatorów: Claude Code, MCP, SDK, API, CLI,
+  Bedrock, Vertex, VS Code, JetBrains, nazw narzędzi (Bash, Grep, WebFetch),
   nazw komend (/model, /config), flag (--print), zmiennych (ANTHROPIC_API_KEY)
-  i nazw plikow (CLAUDE.md, settings.json)
+  i nazw plików (CLAUDE.md, settings.json)
 - utarte formy: hook -> hook, hooks -> hooki, skill -> skill, skills -> skille,
   plugin -> plugin, subagent -> subagent, sandbox -> sandbox, prompt -> prompt,
   token -> token, plan mode -> tryb planowania, thinking -> rozumowanie,
   checkpoint -> punkt kontrolny, statusline -> pasek stanu, transcript -> zapis rozmowy
-- czasownik otwierajacy w formie bezosobowej dokonanej: Added -> Dodano,
-  Fixed -> Poprawiono, Improved -> Ulepszono, Removed -> Usunieto,
-  Changed -> Zmieniono, Reverted -> Cofnieto
-- zachowaj znaczniki markdown z oryginalu (`kod`, **pogrubienie**)
-- bez emoji, bez myslnika jako separatora zdania"""
+- czasownik otwierający w formie bezosobowej dokonanej: Added -> Dodano,
+  Fixed -> Poprawiono, Improved -> Ulepszono, Removed -> Usunięto,
+  Changed -> Zmieniono, Reverted -> Cofnięto
+- zachowaj znaczniki markdown z oryginału (`kod`, **pogrubienie**)
+- bez emoji, bez myślnika jako separatora zdania"""
 
-PROMPT = """Przetlumacz na polski wpisy z changelogu Claude Code.
+PROMPT = """Przetłumacz na polski wpisy z changelogu Claude Code.
 
 Zasady:
 {glossary}
 
-Zwroc WYLACZNIE obiekt JSON: klucz to numer wpisu jako tekst, wartosc to
-tlumaczenie. Bez komentarza przed ani po, bez bloku kodu, wszystkie {n} pozycji.
+Zwróć WYŁĄCZNIE obiekt JSON: klucz to numer wpisu jako tekst, wartość to
+tłumaczenie. Bez komentarza przed ani po, bez bloku kodu, wszystkie {n} pozycji.
 
 Wpisy:
 {items}"""
+
+# Zaobserwowane 2026-08-18: model potrafi oddać poprawną polszczyznę pozbawioną
+# znaków diakrytycznych i robi to całymi wsadami.
+#
+# Wykrywanie po „braku jakiegokolwiek ogonka" nie działa: poprawne zdanie
+# potrafi nie mieć ani jednego („Poprawiono otwieranie dodatkowych okien VS Code
+# przy starcie w Windows"). Dlatego szukamy form, które bez znaku diakrytycznego
+# NIE SĄ polskim słowem — „obsluge", „bledow", „ktore", „domyslny". Zero
+# fałszywych trafień jest tu ważniejsze niż złapanie każdego przypadku.
+KALEKIE = re.compile(r"""\b(
+    sie|ktor[aey]|ktorego|ktorej|ktorych|ktorym|moze|mozna|mozliw\w*|jesli|wiecej|
+    rozn\w*|blad|bled\w*|polaczen\w*|polaczy\w*|nastepn\w*|wlacz\w*|wylacz\w*|zmienic|
+    dziala\w*|uzytk\w*|uzywa\w*|uzycie|dlugosc\w*|wiadomosc\w*|kolejnosc\w*|obslug\w*|
+    narzedzi\w*|bedzie|beda|wyswietl\w*|domysln\w*|rowniez|zrodl\w*|sciezk\w*|
+    glebokosc\w*|wyrownan\w*|zagniezdz\w*|uniewazni\w*|podkresl\w*|
+    elementow|miedzy|wzgledem|usuniet\w*|zwiekszon\w*|wiekszosc|czesc|
+    czesci|opoznien\w*|zaleznosc\w*|wlasciw\w*|przegladark\w*|wyjatk\w*|blednie
+    )\b""", re.I | re.X)
+
+# Uwaga na przyszlosc przy rozszerzaniu listy: „zmniejszono", „ortograficzne"
+# i „niepoprawny" NIE maja ogonkow i sa poprawne. Wpisanie ich tutaj powodowalo
+# ponowne tlumaczenie 36 dobrych wpisow w kolko.
 
 _lock = threading.Lock()
 
@@ -95,9 +119,20 @@ def parse_reply(reply):
     return data if isinstance(data, dict) else None
 
 
+def kaleka(tekst):
+    """True, gdy tekst zawiera slowo, ktore w polszczyznie zawsze ma ogonek."""
+    return bool(KALEKIE.search(tekst))
+
+
+def wsad_kaleki(wynik):
+    """True, gdy ktorykolwiek wpis we wsadzie jest okaleczony."""
+    return any(kaleka(t) for t in wynik.values())
+
+
 def translate_batch(texts, model=MODEL, timeout=TIMEOUT):
     """Slownik oryginal -> tlumaczenie. Jedno ponowienie, potem pusty wynik."""
     prompt = build_prompt(texts)
+    ostatni = {}
     for proba in range(2):
         try:
             data = parse_reply(_run_claude(prompt, model, timeout))
@@ -110,9 +145,16 @@ def translate_batch(texts, model=MODEL, timeout=TIMEOUT):
             wartosc = data.get(str(i))
             if isinstance(wartosc, str) and wartosc.strip():
                 wynik[oryginal] = wartosc.strip()
-        if wynik:
-            return wynik
-    return {}
+        if not wynik:
+            continue
+        if wsad_kaleki(wynik):
+            # zapamietujemy jako awaryjne wyjscie i probujemy jeszcze raz:
+            # polszczyzna bez ogonkow jest lepsza niz brak tlumaczenia,
+            # ale gorsza niz poprawna
+            ostatni = wynik
+            continue
+        return wynik
+    return ostatni
 
 
 def translate_missing(entries, store_path, workers=4, model=MODEL, batch=BATCH, progress=None):
