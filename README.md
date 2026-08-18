@@ -105,8 +105,8 @@ Kolejne wdrożenia robi GitHub Actions przy każdym pushu do `main`
 | `CLOUDFLARE_ACCOUNT_ID` | `npx wrangler whoami` po zalogowaniu |
 
 ```powershell
-gh secret set CLOUDFLARE_API_TOKEN --repo lukaszpodgorski-pl/claude-code
-gh secret set CLOUDFLARE_ACCOUNT_ID --repo lukaszpodgorski-pl/claude-code
+gh secret set CLOUDFLARE_API_TOKEN --repo lukaszpodgorski-pl/claude-code-timeline-changelog
+gh secret set CLOUDFLARE_ACCOUNT_ID --repo lukaszpodgorski-pl/claude-code-timeline-changelog
 ```
 
 Trasy są w `wrangler.toml`. Są dwie, bo wzorzec `/claude-code/*` nie łapie adresu
