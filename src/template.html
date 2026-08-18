@@ -1,0 +1,642 @@
+<title>Oś czasu Claude Code</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#0e0c0b; --bg2:#161311; --bg3:#1e1a17;
+  --line:rgba(255,255,255,.075); --line2:rgba(255,255,255,.14);
+  --txt:#F0EBE3; --dim:#9A9084; --dim2:#6B6358;
+  --accent:#D97757; --accent-soft:rgba(217,119,87,.16);
+  --slot:40px; --pad:80px;
+  --font:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",Consolas,"SF Mono",monospace;
+}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--txt);font-family:var(--font);
+  font-size:14px;line-height:1.45;overflow:hidden;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mcard:focus-visible{outline-offset:-1px}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;background:
+  radial-gradient(1200px 600px at 12% -10%,rgba(217,119,87,.10),transparent 60%),
+  radial-gradient(900px 500px at 92% 0%,rgba(91,141,239,.08),transparent 60%),
+  var(--bg);}
+
+/* ---------- header ---------- */
+#hd{flex:none;display:flex;align-items:center;gap:18px;padding:10px 18px 9px;
+    border-bottom:1px solid var(--line);background:rgba(14,12,11,.82);backdrop-filter:blur(14px);z-index:40}
+.hd-brand{display:flex;align-items:center;gap:11px;flex:none}
+.mark{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:8px;
+  background:linear-gradient(150deg,var(--accent),#8f4a33);box-shadow:0 3px 14px rgba(217,119,87,.34)}
+.mark svg{width:17px;height:17px;fill:#fff}
+h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+#sub{margin:1px 0 0;font-size:11px;color:var(--dim);white-space:nowrap;font-family:var(--mono)}
+#legend{display:flex;flex-wrap:wrap;gap:4px 5px;flex:1 1 auto;min-width:0;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 6px;border-radius:999px;
+  border:1px solid var(--line2);background:rgba(255,255,255,.03);font-size:11px;color:var(--dim);
+  cursor:pointer;user-select:none;transition:.14s;white-space:nowrap}
+.chip:hover{background:rgba(255,255,255,.075);color:var(--txt)}
+.chip .sw{width:9px;height:9px;border-radius:3px;flex:none}
+.chip.off{opacity:.32}
+.chip.solo{border-color:currentColor;background:rgba(255,255,255,.10);color:var(--txt)}
+.hd-tools{display:flex;align-items:center;gap:7px;flex:none}
+#q{width:190px;padding:6px 10px;border-radius:8px;border:1px solid var(--line2);
+   background:rgba(255,255,255,.04);color:var(--txt);font-size:12px;font-family:var(--font);outline:none}
+#q:focus{border-color:var(--accent);background:rgba(255,255,255,.07)}
+#q::placeholder{color:var(--dim2)}
+#qinfo{font-size:11px;color:var(--dim);font-family:var(--mono);min-width:52px;text-align:right}
+.btn{padding:6px 9px;border-radius:8px;border:1px solid var(--line2);background:rgba(255,255,255,.04);
+  color:var(--dim);font-size:11.5px;cursor:pointer;transition:.14s;font-family:var(--font);white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.09);color:var(--txt);border-color:var(--line2)}
+.btn.on{background:var(--accent-soft);border-color:rgba(217,119,87,.5);color:#f0c3ae}
+
+/* ---------- scroller ---------- */
+#scroller{flex:1 1 auto;overflow-x:auto;overflow-y:hidden;position:relative;cursor:grab;
+  scrollbar-color:rgba(255,255,255,.2) transparent;scroll-behavior:auto}
+#scroller.grabbing{cursor:grabbing}
+#scroller::-webkit-scrollbar{height:11px}
+#scroller::-webkit-scrollbar-track{background:rgba(255,255,255,.03)}
+#scroller::-webkit-scrollbar-thumb{background:rgba(255,255,255,.17);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+#scroller::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.3);background-clip:content-box}
+#track{position:relative;height:100%;display:flex;flex-direction:column;min-width:100%}
+#eraBg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.eraFill{position:absolute;top:0;bottom:0}
+.eraFill::after{content:"";position:absolute;top:0;bottom:0;right:0;width:1px;background:var(--line2)}
+.row{position:relative;flex:none;z-index:1}
+
+/* ---------- ery + linijka ---------- */
+.row-era{height:30px;border-bottom:1px solid var(--line)}
+.eraTag{position:absolute;top:5px;height:20px;display:flex;align-items:center;
+  border-radius:6px;font-size:11px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+.eraTag>span{position:sticky;left:0;padding:0 12px}
+.eraTag i{font-style:normal;font-weight:400;color:var(--dim);font-size:10.5px}
+.row-ruler{height:24px;border-bottom:1px solid var(--line)}
+.mtick{position:absolute;top:0;bottom:0;border-left:1px solid var(--line);padding-left:6px;
+  font-size:10px;color:var(--dim2);font-family:var(--mono);display:flex;align-items:center;white-space:nowrap}
+.mtick.q{color:var(--dim);border-left-color:var(--line2)}
+
+/* ---------- kamienie milowe ---------- */
+.row-mile{flex:none;height:260px}
+.mstem{position:absolute;width:1px;background:linear-gradient(to bottom,transparent,rgba(217,119,87,.45));z-index:1}
+.mcard{position:absolute;width:238px;padding:7px 9px 8px;border-radius:9px;z-index:2;
+  background:linear-gradient(165deg,rgba(32,27,24,.97),rgba(21,18,16,.97));
+  border:1px solid var(--line2);border-left-width:3px;cursor:pointer;
+  transition:box-shadow .13s,border-color .13s;box-shadow:0 6px 18px rgba(0,0,0,.45);overflow:hidden}
+.mcard:hover{height:auto!important;box-shadow:0 12px 34px rgba(0,0,0,.7);z-index:30;border-color:rgba(255,255,255,.3)}
+.mcard.big{width:262px;background:linear-gradient(165deg,rgba(45,32,26,.98),rgba(24,19,17,.98))}
+.mcard .mtop{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.mcard .flag{width:13px;height:13px;flex:none}
+.mcard .mv{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:.02em}
+.mcard .mdate{font-family:var(--mono);font-size:9.5px;color:var(--dim2);margin-left:auto}
+.mcard .mt{font-size:12.5px;font-weight:640;line-height:1.28;letter-spacing:-.005em;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mcard.big .mt{font-size:13.5px}
+.mcard .md{margin-top:4px;font-size:11px;color:var(--dim);line-height:1.42;
+  display:-webkit-box;-webkit-line-clamp:var(--mdc,2);-webkit-box-orient:vertical;overflow:hidden}
+.mcard:hover .md{-webkit-line-clamp:9}
+.mcard .md code{font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.07);padding:0 3px;border-radius:3px}
+.mcard.dim{opacity:.22}
+
+/* ---------- słupki wydań ---------- */
+.row-bars{flex:none;height:170px}
+.col{position:absolute;bottom:0;top:0;cursor:pointer}
+.col .stack{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:26px;
+  display:flex;flex-direction:column-reverse;border-radius:3px 3px 0 0;overflow:hidden;transition:filter .12s}
+.col:hover .stack{filter:brightness(1.35)}
+.seg{width:100%;transition:opacity .16s}
+.col.hit .stack{outline:1.5px solid #ffd9a0;outline-offset:1.5px}
+.col.sel .stack{outline:2px solid var(--accent);outline-offset:2px}
+.col.mile .stack{box-shadow:0 0 0 1px rgba(217,119,87,.5) inset}
+
+/* ---------- oś ---------- */
+.row-axis{height:38px;border-top:1px solid var(--line2)}
+.tickdot{position:absolute;top:-3px;width:5px;height:5px;border-radius:50%;background:var(--dim2);
+  transform:translateX(-50%);transition:.14s}
+.tickdot.m{width:9px;height:9px;top:-5px;background:var(--accent);box-shadow:0 0 10px rgba(217,119,87,.8)}
+.vlab{position:absolute;top:8px;font-family:var(--mono);font-size:9.5px;color:var(--dim2);
+  transform-origin:left top;transform:rotate(38deg);white-space:nowrap}
+.vlab.m{color:#e5a184}
+
+/* ---------- pasy kategorii ---------- */
+.row-lanes{border-top:1px solid var(--line);overflow:hidden;transition:height .2s}
+.lane{position:relative;height:15px}
+.lane:nth-child(even){background:rgba(255,255,255,.017)}
+.lane-name{position:sticky;left:0;z-index:6;display:inline-flex;align-items:center;gap:5px;
+  height:15px;padding:0 9px 0 8px;font-size:9.5px;color:var(--dim);white-space:nowrap;
+  background:linear-gradient(90deg,var(--bg) 72%,rgba(14,12,11,0));pointer-events:none}
+.lane-name b{width:7px;height:7px;border-radius:2px;flex:none}
+.dot{position:absolute;top:3px;height:10px;border-radius:2.5px;transform:translateX(-50%)}
+.lane.off{opacity:.12}
+
+/* ---------- minimapa ---------- */
+#mini{flex:none;height:56px;position:relative;border-top:1px solid var(--line);
+  background:rgba(0,0,0,.32);cursor:pointer;user-select:none}
+#miniC{position:absolute;inset:0;width:100%;height:100%;display:block}
+#miniWin{position:absolute;top:0;bottom:0;border:1px solid rgba(217,119,87,.85);
+  background:rgba(217,119,87,.13);border-radius:3px;pointer-events:none}
+
+/* ---------- panel ---------- */
+#panel{position:fixed;top:0;right:0;bottom:0;width:min(460px,92vw);z-index:80;
+  background:linear-gradient(180deg,#171412,#100e0d);border-left:1px solid var(--line2);
+  box-shadow:-24px 0 60px rgba(0,0,0,.6);transform:translateX(102%);transition:transform .22s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column}
+#panel.open{transform:none}
+#ph{flex:none;padding:16px 18px 13px;border-bottom:1px solid var(--line)}
+#pclose{position:absolute;top:12px;right:14px;width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);
+  background:rgba(255,255,255,.04);color:var(--dim);cursor:pointer;font-size:14px;line-height:1}
+#pclose:hover{color:var(--txt);background:rgba(255,255,255,.1)}
+#pv{font-family:var(--mono);font-size:19px;font-weight:600;letter-spacing:-.01em}
+#pd{font-size:11.5px;color:var(--dim);margin-top:2px;font-family:var(--mono)}
+#pmile{margin-top:12px;padding:11px 12px;border-radius:9px;border:1px solid rgba(217,119,87,.35);
+  background:linear-gradient(150deg,rgba(217,119,87,.15),rgba(217,119,87,.05))}
+#pmile .pmt{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:650;margin-bottom:4px}
+#pmile .pmd{font-size:12px;color:#e8d5cb;line-height:1.5}
+#pmile code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px}
+#pstats{display:flex;gap:5px;flex-wrap:wrap;margin-top:11px}
+.pst{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);
+  padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.05)}
+.pst b{width:7px;height:7px;border-radius:2px}
+#pbody{flex:1 1 auto;overflow-y:auto;padding:12px 18px 30px;scrollbar-color:rgba(255,255,255,.2) transparent}
+#pbody::-webkit-scrollbar{width:9px}
+#pbody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px;border:2px solid transparent;background-clip:content-box}
+.ent{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.045);font-size:12.4px;line-height:1.5}
+.ent:last-child{border-bottom:0}
+.ent .bar{width:3px;border-radius:2px;flex:none;margin-top:2px;align-self:stretch}
+.ent .kd{font-size:9px;text-transform:uppercase;letter-spacing:.06em;padding:1px 5px;border-radius:4px;
+  flex:none;align-self:flex-start;margin-top:2px;font-weight:600}
+.k2{background:rgba(126,214,110,.16);color:#9fe08f}
+.k1{background:rgba(91,141,239,.16);color:#9dbcff}
+.k0{background:rgba(255,255,255,.06);color:var(--dim2)}
+.ent .tx{flex:1 1 auto;color:#ded7cd;word-break:break-word}
+.ent.f0 .tx{color:#a79e93}
+.ent mark{background:rgba(255,214,120,.28);color:#ffe6b8;border-radius:2px;padding:0 1px}
+.ent code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.07);padding:0 3px;border-radius:3px}
+.ent a{color:#9dbcff;text-decoration:none}
+.ent a:hover{text-decoration:underline}
+
+/* ---------- tooltip ---------- */
+#tip{position:fixed;z-index:90;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:rgba(22,19,17,.97);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;
+  font-size:11.5px;box-shadow:0 8px 26px rgba(0,0,0,.6);max-width:250px}
+#tip.on{opacity:1}
+#tip .tv{font-family:var(--mono);font-weight:600;font-size:12px}
+#tip .td{font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:4px}
+#tip .tr{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim)}
+#tip .tr b{width:7px;height:7px;border-radius:2px;flex:none}
+#tip .tm{margin-top:5px;padding-top:5px;border-top:1px solid var(--line);color:#e5a184;font-size:10.5px}
+
+#hint{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);z-index:70;font-size:11.5px;
+  color:var(--dim);background:rgba(22,19,17,.92);border:1px solid var(--line2);border-radius:999px;
+  padding:6px 16px;box-shadow:0 6px 20px rgba(0,0,0,.5);transition:opacity .4s}
+#hint kbd{font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.09);border-radius:4px;padding:1px 5px;margin:0 1px}
+@media (max-width:1100px){#legend{display:none}}
+</style>
+
+<div id="app">
+  <header id="hd">
+    <div class="hd-brand">
+      <div class="mark"><svg viewBox="0 0 24 24"><path d="M5 3v18h2v-7.2l11-3.3-11-3.3V3z"/></svg></div>
+      <div>
+        <h1>Oś czasu Claude Code</h1>
+        <p id="sub"></p>
+      </div>
+    </div>
+    <div id="legend"></div>
+    <div class="hd-tools">
+      <input id="q" placeholder="Szukaj w changelogu…" autocomplete="off" spellcheck="false">
+      <span id="qinfo"></span>
+      <button class="btn" id="prevM" title="Poprzedni kamień milowy (M)">◀</button>
+      <button class="btn" id="nextM" title="Następny kamień milowy (N)">Kamienie ▶</button>
+      <button class="btn on" id="tglLanes" title="Pokaż/ukryj pasy kategorii">Pasy</button>
+    </div>
+  </header>
+
+  <div id="scroller">
+    <div id="track">
+      <div id="eraBg"></div>
+      <div class="row row-era" id="rowEra"></div>
+      <div class="row row-ruler" id="rowRuler"></div>
+      <div class="row row-mile" id="rowMile"></div>
+      <div class="row row-bars" id="rowBars"></div>
+      <div class="row row-axis" id="rowAxis"></div>
+      <div class="row row-lanes" id="rowLanes"></div>
+    </div>
+  </div>
+
+  <div id="mini"><canvas id="miniC"></canvas><div id="miniWin"></div></div>
+
+  <aside id="panel">
+    <div id="ph">
+      <button id="pclose" title="Zamknij (Esc)">✕</button>
+      <div id="pv"></div><div id="pd"></div>
+      <div id="pmile" hidden></div>
+      <div id="pstats"></div>
+    </div>
+    <div id="pbody"></div>
+  </aside>
+
+  <div id="tip"></div>
+  <div id="hint">Przewijaj kółkiem w bok · <kbd>←</kbd><kbd>→</kbd> ruch · <kbd>N</kbd> następny kamień milowy · kliknij słupek po szczegóły</div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/;
+const T = DATA.topics, R = DATA.releases, M = DATA.milestones, E = DATA.eras;
+const SLOT = 40, PAD = 90;
+const W = PAD * 2 + (R.length - 1) * SLOT;
+const MON = ["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
+const KIND = ["poprawka", "ulepszenie", "nowość"];
+
+const $ = s => document.querySelector(s);
+const x = i => PAD + i * SLOT;
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtDate = d => { const p = d.split("-"); return (+p[2]) + " " + MON[+p[1]-1] + " " + p[0]; };
+
+/* ---------- pochodne ---------- */
+const mileByIdx = {};
+M.forEach((m, k) => { m.k = k; mileByIdx[m.i] = m; });
+
+R.forEach(r => {
+  const counts = new Array(T.length).fill(0);
+  const pairs = new Map();
+  for (const e of r[3]) {
+    counts[e[0]]++;
+    const key = e[0] * 4 + e[1];
+    pairs.set(key, (pairs.get(key) || 0) + 1);
+  }
+  r.counts = counts;
+  r.n = r[3].length;
+  r.stack = [...pairs.entries()].map(([k, n]) => [k >> 2, k & 3, n])
+    .sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+  let best = 0;
+  for (let t = 0; t < T.length - 1; t++) if (counts[t] > counts[best]) best = t;
+  r.dom = best;
+});
+const MAXN = Math.max(...R.map(r => r.n));
+// skala słupków: odniesieniem jest 92. percentyl, żeby pojedyncze mega-wydanie
+// (2.1.0 z ~90 wpisami) nie spłaszczało całej reszty
+const NREF = (() => { const s = R.map(r => r.n).sort((a, b) => a - b); return s[Math.floor(s.length * 0.92)] || MAXN; })();
+
+/* ---------- render: tło er + linijka ---------- */
+(function () {
+  let eb = "", et = "";
+  E.forEach((e, k) => {
+    const l = x(e.from) - SLOT / 2, w = x(e.to) - x(e.from) + SLOT;
+    const tint = ["rgba(217,119,87,.07)", "rgba(126,214,110,.06)", "rgba(91,141,239,.07)", "rgba(181,136,240,.07)"][k % 4];
+    eb += `<div class="eraFill" style="left:${l}px;width:${w}px;background:linear-gradient(180deg,${tint},transparent 55%)"></div>`;
+    et += `<div class="eraTag" style="left:${l + 8}px;width:${Math.max(160, w - 16)}px;background:${tint.replace(/\.0\d+\)/, ".20)")}">
+             <span>${esc(e.name)} <i>· ${esc(e.sub)}</i></span></div>`;
+  });
+  $("#eraBg").innerHTML = eb;
+  $("#rowEra").innerHTML = et;
+
+  let ru = "", lastM = "";
+  R.forEach((r, i) => {
+    const ym = r[1].slice(0, 7);
+    if (ym === lastM) return;
+    lastM = ym;
+    const mo = +ym.slice(5, 7), yr = ym.slice(0, 4);
+    const q = mo === 1;
+    ru += `<div class="mtick${q ? " q" : ""}" style="left:${x(i) - SLOT / 2}px">${MON[mo-1]}${q || mo === 3 ? " " + yr : ""}</div>`;
+  });
+  $("#rowRuler").innerHTML = ru;
+})();
+
+/* ---------- render: słupki + oś ---------- */
+(function () {
+  let bars = "", ax = "";
+  R.forEach((r, i) => {
+    const hp = 8 + 92 * Math.min(1, Math.sqrt(r.n / NREF));
+    let segs = "";
+    for (const [t, k, n] of r.stack) {
+      const sh = 100 * n / r.n;
+      const op = k === 2 ? 1 : k === 1 ? .68 : .34;
+      segs += `<div class="seg" data-t="${t}" style="height:${sh}%;background:${T[t][2]};opacity:${op}"></div>`;
+    }
+    const m = mileByIdx[i];
+    bars += `<div class="col${m ? " mile" : ""}" data-i="${i}" style="left:${x(i) - SLOT/2}px;width:${SLOT}px">
+               <div class="stack" style="height:${hp}%">${segs}</div></div>`;
+    ax += `<div class="tickdot${m ? " m" : ""}" style="left:${x(i)}px"></div>`;
+    if (m || r.n >= 34 || /^\d+\.\d+\.0$/.test(r[0]))
+      ax += `<div class="vlab${m ? " m" : ""}" style="left:${x(i) + 4}px">${r[0]}</div>`;
+  });
+  $("#rowBars").innerHTML = bars;
+  $("#rowAxis").innerHTML = ax;
+})();
+
+/* ---------- render: kamienie milowe ---------- */
+(function () {
+  let html = "";
+  M.forEach(m => {
+    const r = R[m.i], px = x(m.i);
+    const c = T[T.findIndex(t => t[0] === m.topic)] || T[0];
+    html += `<div class="mstem" style="left:${px}px;bottom:0"></div>
+      <div class="mcard${m.big ? " big" : ""}" role="button" tabindex="0" data-i="${m.i}" data-topics="${m.topic}"
+           style="left:${px}px;border-left-color:${c[2]}">
+        <div class="mtop">
+          <svg class="flag" viewBox="0 0 24 24" fill="${c[2]}"><path d="M5 2v20h2v-8h11l-2.6-4L18 6H7V2z"/></svg>
+          <span class="mv">${r[0]}</span><span class="mdate">${fmtDate(r[1])}</span>
+        </div>
+        <div class="mt">${esc(m.title)}</div>
+        <div class="md">${m.desc}</div>
+      </div>`;
+  });
+  $("#rowMile").innerHTML = html;
+})();
+const MCARDS = [...document.querySelectorAll(".mcard")];
+const MSTEMS = [...document.querySelectorAll(".mstem")];
+MCARDS.forEach((c, k) => { c._px = x(M[k].i); c._w = M[k].big ? 262 : 238; });
+
+/* ---------- render: pasy kategorii ---------- */
+(function () {
+  let html = "";
+  T.forEach((t, ti) => {
+    if (t[0] === "other") return;
+    let dots = "";
+    const mx = Math.max(...R.map(r => r.counts[ti])) || 1;
+    R.forEach((r, i) => {
+      const n = r.counts[ti];
+      if (!n) return;
+      const o = .22 + .78 * Math.sqrt(n / mx);
+      dots += `<div class="dot" style="left:${x(i)}px;width:${SLOT - 14}px;background:${t[2]};opacity:${o}"></div>`;
+    });
+    html += `<div class="lane" data-t="${ti}"><span class="lane-name"><b style="background:${t[2]}"></b>${esc(t[1])}</span>${dots}</div>`;
+  });
+  const rl = $("#rowLanes");
+  rl.innerHTML = html;
+  rl.style.height = rl.children.length * 15 + "px";
+})();
+
+/* ---------- legenda ---------- */
+(function () {
+  $("#legend").innerHTML = T.map((t, i) =>
+    `<span class="chip" data-t="${i}" style="color:${t[2]}"><span class="sw" style="background:${t[2]}"></span>${esc(t[1])}</span>`).join("");
+  $("#sub").textContent = `${R.length} wydań · ${DATA.meta.entries} zmian · ${R[0][0]} → ${R[R.length-1][0]} · ${fmtDate(R[0][1])} → ${fmtDate(R[R.length-1][1])}`;
+})();
+
+/* ---------- filtry kategorii ---------- */
+let solo = null;
+function applyFilter() {
+  document.querySelectorAll(".seg").forEach(s => {
+    s.style.visibility = (solo === null || +s.dataset.t === solo) ? "" : "hidden";
+  });
+  document.querySelectorAll(".lane").forEach(l => l.classList.toggle("off", solo !== null && +l.dataset.t !== solo));
+  document.querySelectorAll(".mcard").forEach(c => {
+    const ti = T.findIndex(t => t[0] === c.dataset.topics);
+    c.classList.toggle("dim", solo !== null && ti !== solo);
+  });
+  document.querySelectorAll(".chip").forEach(c => {
+    c.classList.toggle("solo", solo !== null && +c.dataset.t === solo);
+    c.classList.toggle("off", solo !== null && +c.dataset.t !== solo);
+  });
+  drawMini();
+}
+$("#legend").addEventListener("click", e => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  solo = (solo === +c.dataset.t) ? null : +c.dataset.t;
+  applyFilter();
+});
+
+/* ---------- panel ---------- */
+let sel = -1;
+function openPanel(i) {
+  const r = R[i], m = mileByIdx[i];
+  sel = i;
+  document.querySelectorAll(".col.sel").forEach(c => c.classList.remove("sel"));
+  const col = document.querySelector(`.col[data-i="${i}"]`); if (col) col.classList.add("sel");
+  $("#pv").textContent = "v" + r[0];
+  $("#pd").innerHTML = fmtDate(r[1]) + (r[2] ? "" : " <span style='color:var(--dim2)'>(data szacowana)</span>")
+    + " · " + r.n + " " + plural(r.n, "zmiana", "zmiany", "zmian");
+  const pm = $("#pmile");
+  if (m) {
+    const c = T[T.findIndex(t => t[0] === m.topic)] || T[0];
+    pm.hidden = false;
+    pm.innerHTML = `<div class="pmt"><svg width="14" height="14" viewBox="0 0 24 24" fill="${c[2]}"><path d="M5 2v20h2v-8h11l-2.6-4L18 6H7V2z"/></svg>${esc(m.title)}</div><div class="pmd">${m.desc}</div>`;
+  } else pm.hidden = true;
+  $("#pstats").innerHTML = r.counts.map((n, t) => n ? `<span class="pst"><b style="background:${T[t][2]}"></b>${esc(T[t][1])} ${n}</span>` : "").join("");
+  const q = $("#q").value.trim().toLowerCase();
+  const order = r[3].map((e, k) => [e, k]).sort((a, b) => a[0][0] - b[0][0] || b[0][1] - a[0][1]);
+  $("#pbody").innerHTML = order.map(([e]) => {
+    let tx = esc(e[2])
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+      .replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    if (q) tx = hl(tx, q);
+    return `<div class="ent f${e[1]}"><div class="bar" style="background:${T[e[0]][2]}"></div>
+      <span class="kd k${e[1]}">${KIND[e[1]]}</span><div class="tx">${tx}</div></div>`;
+  }).join("");
+  $("#pbody").scrollTop = 0;
+  $("#panel").classList.add("open");
+}
+function plural(n, a, b, c) { const m = n % 10, h = n % 100; return n === 1 ? a : (m >= 2 && m <= 4 && (h < 12 || h > 14)) ? b : c; }
+function hl(html, q) {
+  const out = (">" + html + "<").replace(/>([^<]+)</g, (mm, txt) => {
+    const idx = txt.toLowerCase().indexOf(q);
+    if (idx < 0) return mm;
+    return ">" + txt.slice(0, idx) + "<mark>" + txt.slice(idx, idx + q.length) + "</mark>" + txt.slice(idx + q.length) + "<";
+  });
+  return out.slice(1, -1);
+}
+$("#pclose").onclick = () => { $("#panel").classList.remove("open"); document.querySelectorAll(".col.sel").forEach(c => c.classList.remove("sel")); sel = -1; };
+$("#rowBars").addEventListener("click", e => { const c = e.target.closest(".col"); if (c) openPanel(+c.dataset.i); });
+$("#rowMile").addEventListener("click", e => { const c = e.target.closest(".mcard"); if (c) { openPanel(+c.dataset.i); centerOn(+c.dataset.i); } });
+$("#rowMile").addEventListener("keydown", e => {
+  const c = e.target.closest(".mcard");
+  if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPanel(+c.dataset.i); centerOn(+c.dataset.i); }
+});
+
+/* ---------- tooltip ---------- */
+const tip = $("#tip");
+$("#rowBars").addEventListener("mousemove", e => {
+  const c = e.target.closest(".col");
+  if (!c) { tip.classList.remove("on"); return; }
+  const i = +c.dataset.i, r = R[i], m = mileByIdx[i];
+  const rows = r.counts.map((n, t) => n ? `<div class="tr"><b style="background:${T[t][2]}"></b>${esc(T[t][1])} · ${n}</div>` : "").join("");
+  tip.innerHTML = `<div class="tv">v${r[0]}</div><div class="td">${fmtDate(r[1])} · ${r.n} zmian</div>${rows}`
+    + (m ? `<div class="tm">🚩 ${esc(m.title)}</div>` : "");
+  tip.classList.add("on");
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.min(e.clientX + 15, innerWidth - w - 10) + "px";
+  tip.style.top = Math.max(8, Math.min(e.clientY - h - 12, innerHeight - h - 10)) + "px";
+});
+$("#rowBars").addEventListener("mouseleave", () => tip.classList.remove("on"));
+
+/* ---------- szukanie ---------- */
+let hits = [], hitAt = -1;
+$("#q").addEventListener("input", () => {
+  const q = $("#q").value.trim().toLowerCase();
+  document.querySelectorAll(".col.hit").forEach(c => c.classList.remove("hit"));
+  hits = []; hitAt = -1;
+  if (q.length < 2) { $("#qinfo").textContent = ""; drawMini(); return; }
+  R.forEach((r, i) => {
+    if (r[0].includes(q) || r[3].some(e => e[2].toLowerCase().includes(q))) hits.push(i);
+  });
+  hits.forEach(i => { const c = document.querySelector(`.col[data-i="${i}"]`); if (c) c.classList.add("hit"); });
+  $("#qinfo").textContent = hits.length ? hits.length + " wyd." : "brak";
+  drawMini();
+  if (hits.length) { hitAt = 0; centerOn(hits[0]); }
+});
+$("#q").addEventListener("keydown", e => {
+  if (e.key !== "Enter" || !hits.length) return;
+  hitAt = (hitAt + (e.shiftKey ? -1 : 1) + hits.length) % hits.length;
+  centerOn(hits[hitAt]); openPanel(hits[hitAt]);
+});
+
+/* ---------- nawigacja ---------- */
+const sc = $("#scroller");
+// wlasna animacja: scrollTo({behavior:"smooth"}) i CSS scroll-behavior potrafia
+// byc calkowicie ignorowane, wiec nie polegamy na nich
+let animRAF = 0;
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function smoothTo(target) {
+  cancelAnimationFrame(animRAF);
+  const to = clamp(target, 0, sc.scrollWidth - sc.clientWidth);
+  const from = sc.scrollLeft, dist = to - from;
+  if (Math.abs(dist) < 2 || document.hidden || REDUCE) { sc.scrollLeft = to; return; }
+  const dur = clamp(Math.abs(dist) * 0.32, 240, 900), t0 = performance.now();
+  const ease = p => (p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const step = now => {
+    const p = Math.min(1, (now - t0) / dur);
+    sc.scrollLeft = from + dist * ease(p);
+    if (p < 1) animRAF = requestAnimationFrame(step);
+  };
+  animRAF = requestAnimationFrame(step);
+}
+function centerOn(i) { smoothTo(x(i) - sc.clientWidth / 2); }
+let mAt = -1;
+function gotoMile(dir) {
+  const idxs = M.map(m => m.i);
+  const cx = sc.scrollLeft + sc.clientWidth / 2;
+  if (dir > 0) mAt = idxs.findIndex(i => x(i) > cx + 4);
+  else { const c = idxs.filter(i => x(i) < cx - 4); mAt = c.length ? idxs.indexOf(c[c.length - 1]) : -1; }
+  if (mAt < 0) mAt = dir > 0 ? 0 : idxs.length - 1;
+  centerOn(idxs[mAt]); openPanel(idxs[mAt]);
+}
+$("#nextM").onclick = () => gotoMile(1);
+$("#prevM").onclick = () => gotoMile(-1);
+$("#tglLanes").onclick = e => {
+  const rl = $("#rowLanes"), on = rl.style.height !== "0px";
+  rl.style.height = on ? "0px" : rl.children.length * 15 + "px";
+  e.currentTarget.classList.toggle("on", !on);
+  setTimeout(() => { layout(); drawMini(); }, 220);
+};
+
+sc.addEventListener("wheel", e => {
+  if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  cancelAnimationFrame(animRAF);
+  sc.scrollLeft += e.deltaY;
+  e.preventDefault();
+}, { passive: false });
+
+let drag = null;
+sc.addEventListener("mousedown", e => {
+  if (e.target.closest(".mcard") || e.button !== 0) return;
+  cancelAnimationFrame(animRAF);
+  drag = { x: e.clientX, l: sc.scrollLeft, moved: false };
+  sc.classList.add("grabbing");
+});
+addEventListener("mousemove", e => {
+  if (!drag) return;
+  if (Math.abs(e.clientX - drag.x) > 3) drag.moved = true;
+  sc.scrollLeft = drag.l - (e.clientX - drag.x);
+});
+addEventListener("mouseup", () => { if (drag) { sc.classList.remove("grabbing"); drag = null; } });
+
+addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") { if (e.key === "Escape") e.target.blur(); return; }
+  const k = e.key;
+  if (k === "ArrowRight") { sc.scrollLeft += SLOT * 3; e.preventDefault(); }
+  else if (k === "ArrowLeft") { sc.scrollLeft -= SLOT * 3; e.preventDefault(); }
+  else if (k === "PageDown") { sc.scrollLeft += sc.clientWidth * .9; e.preventDefault(); }
+  else if (k === "PageUp") { sc.scrollLeft -= sc.clientWidth * .9; e.preventDefault(); }
+  else if (k === "Home") { smoothTo(0); e.preventDefault(); }
+  else if (k === "End") { smoothTo(W); e.preventDefault(); }
+  else if (k === "n" || k === "N") gotoMile(1);
+  else if (k === "m" || k === "M") gotoMile(-1);
+  else if (k === "Escape") $("#pclose").click();
+  else if (k === "/") { $("#q").focus(); e.preventDefault(); }
+});
+
+/* ---------- minimapa ---------- */
+const mc = $("#miniC"), ctx = mc.getContext("2d");
+function drawMini() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const w = mc.clientWidth, h = mc.clientHeight;
+  mc.width = w * dpr; mc.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const bw = Math.max(1, w / R.length);
+  R.forEach((r, i) => {
+    const px = i * (w / R.length);
+    const bh = 4 + (h - 16) * Math.min(1, Math.sqrt(r.n / NREF));
+    const t = (solo !== null && r.counts[solo]) ? solo : r.dom;
+    ctx.globalAlpha = (solo !== null && !r.counts[solo]) ? .13 : (hits.length && !hits.includes(i) ? .2 : .9);
+    ctx.fillStyle = T[t][2];
+    ctx.fillRect(px, h - 10 - bh, Math.max(1, bw - .4), bh);
+  });
+  ctx.globalAlpha = 1;
+  M.forEach(m => {
+    ctx.fillStyle = "#D97757";
+    ctx.fillRect(m.i * (w / R.length), h - 7, Math.max(1.5, bw), 5);
+  });
+  ctx.fillStyle = "rgba(255,255,255,.13)";
+  ctx.fillRect(0, h - 2, w, 1);
+}
+function syncWin() {
+  const w = mc.clientWidth;
+  const l = sc.scrollLeft / W * w, ww = sc.clientWidth / W * w;
+  const mw = $("#miniWin");
+  mw.style.left = l + "px"; mw.style.width = Math.max(10, ww) + "px";
+}
+sc.addEventListener("scroll", syncWin, { passive: true });
+let mdrag = false;
+function miniJump(e) {
+  cancelAnimationFrame(animRAF);
+  const rect = mc.getBoundingClientRect();
+  const p = (e.clientX - rect.left) / rect.width;
+  sc.scrollLeft = p * W - sc.clientWidth / 2;
+}
+$("#mini").addEventListener("mousedown", e => { mdrag = true; miniJump(e); });
+addEventListener("mousemove", e => { if (mdrag) miniJump(e); });
+addEventListener("mouseup", () => mdrag = false);
+
+/* ---------- adaptacyjny układ pionowy ---------- */
+function layout() {
+  const fixed = $("#rowEra").offsetHeight + $("#rowRuler").offsetHeight
+              + $("#rowAxis").offsetHeight + $("#rowLanes").offsetHeight;
+  const avail = Math.max(240, sc.clientHeight - fixed);
+  const barsH = clamp(Math.round(avail * 0.40), 130, 330);
+  const mileH = avail - barsH;
+  $("#rowMile").style.height = mileH + "px";
+  $("#rowBars").style.height = barsH + "px";
+
+  const lanes = clamp(Math.floor(mileH / 106), 2, 5);
+  const pitch = mileH / lanes;
+  const CH = Math.round(Math.min(140, pitch - 10));
+  $("#rowMile").style.setProperty("--mdc", clamp(Math.floor((CH - 60) / 16), 1, 5));
+
+  const ends = new Array(lanes).fill(-1e9);
+  MCARDS.forEach((c, k) => {
+    let lane = -1;
+    for (let d = 0; d < lanes; d++) {           // preferuj kolejny pas -> zygzak
+      const l = (k + d) % lanes;
+      if (c._px > ends[l] + 10) { lane = l; break; }
+    }
+    if (lane < 0) lane = ends.indexOf(Math.min(...ends));
+    ends[lane] = c._px + c._w;
+    c.style.bottom = Math.round(lane * pitch) + "px";
+    c.style.height = CH + "px";
+    MSTEMS[k].style.height = Math.round(lane * pitch + CH) + "px";
+  });
+}
+
+/* ---------- start ---------- */
+$("#track").style.width = W + "px";
+addEventListener("resize", () => { layout(); drawMini(); syncWin(); });
+layout(); drawMini(); syncWin();
+setTimeout(() => { const h = $("#hint"); h.style.opacity = 0; setTimeout(() => h.remove(), 500); }, 9000);
+</script>
