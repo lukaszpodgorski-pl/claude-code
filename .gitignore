@@ -6,3 +6,4 @@ logs/
 src/data/releases.json
 build/
 docs/
+.wrangler/

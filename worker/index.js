@@ -21,6 +21,17 @@ export default {
       : url.pathname;
 
     const cel = new URL(sciezka + url.search, url.origin);
-    return env.ASSETS.fetch(new Request(cel, request));
+    const odp = await env.ASSETS.fetch(new Request(cel, request));
+
+    // zasoby przekierowuja wzgledem sciezki BEZ prefiksu (np. /timeline ->
+    // /timeline/), wiec trzeba go doklejac z powrotem, inaczej uzytkownik
+    // ladowalby poza /claude-code/ i trafial na stary origin
+    const cel2 = odp.headers.get("location");
+    if (cel2 && cel2.startsWith("/") && !cel2.startsWith(PREFIX + "/")) {
+      const poprawiona = new Response(odp.body, odp);
+      poprawiona.headers.set("location", PREFIX + cel2);
+      return poprawiona;
+    }
+    return odp;
   },
 };
