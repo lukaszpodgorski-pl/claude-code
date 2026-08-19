@@ -2,7 +2,7 @@
 """Buduje oś czasu Claude Code: changelog + daty npm + tłumaczenia -> strona.
 
 Wyjście:
-  public/timeline/index.html  pełny dokument serwowany przez Cloudflare Pages
+  public/claude-code/timeline/index.html  dokument serwowany przez Workera Cloudflare
   build/artifact.html         sama treść, do okazjonalnej publikacji jako Artifact
 
 Uruchomienie:  python src/build.py
@@ -25,7 +25,9 @@ TOPICS = i18n.TOPICS
 TIDX = {t[0]: i for i, t in enumerate(TOPICS)}
 
 TRANSLATIONS = os.path.join(HERE, "data", "translations.json")
-OUT_PAGE = os.path.join(ROOT, "public", "timeline", "index.html")
+# katalog zasobów odwzorowuje ścieżkę na domenie (/claude-code/), bo Worker
+# ze statycznymi zasobami dopasowuje pliki do pełnej ścieżki żądania
+OUT_PAGE = os.path.join(ROOT, "public", "claude-code", "timeline", "index.html")
 OUT_ARTIFACT = os.path.join(ROOT, "build", "artifact.html")
 
 # --- reguły klasyfikacji: pierwsza pasująca wygrywa ------------------------

@@ -1,17 +1,15 @@
-# Worker stojacy na sciezce /claude-code/ na istniejacej domenie.
-# Sam nie ma zadnych plikow: pyta o nie Workera `claude-code-assets` przez
-# wiazanie uslugowe. Powod podzialu: Cloudflare nie pozwala kierowac Workera
-# ze statycznymi zasobami na trase zawierajaca sciezke (tylko na cala nazwe hosta).
+# Jeden Worker serwujacy strone pod sciezka /claude-code/ na istniejacej domenie.
+# Katalog ./public odwzorowuje te sciezke (public/claude-code/...), bo Worker ze
+# statycznymi zasobami dopasowuje pliki do pelnej sciezki zadania.
 name = "claude-code"
-main = "worker/index.js"
 compatibility_date = "2026-08-18"
 
-[[services]]
-binding = "SITE"
-service = "claude-code-assets"
+[assets]
+directory = "./public"
 
 # Dwie trasy, bo wzorzec z /* nie lapie adresu bez ukosnika na koncu:
 # /claude-code poszloby na stary origin i skonczylo sie jego 404.
+# Sam ukosnik dokleja juz Cloudflare (html_handling = auto-trailing-slash).
 [[routes]]
 pattern = "lukaszpodgorski.pl/claude-code"
 zone_name = "lukaszpodgorski.pl"
