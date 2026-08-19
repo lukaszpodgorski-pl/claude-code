@@ -141,14 +141,33 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
 #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 #q::placeholder{color:var(--dim2)}
 #qinfo{font-size:11px;color:var(--dim);font-family:var(--mono);min-width:76px;text-align:right}
-.btn{padding:6px 9px;border-radius:8px;border:1px solid var(--line2);background:var(--hover);
+/* jedna wysokosc dla wszystkich przyciskow paska narzedzi */
+.btn{display:inline-flex;align-items:center;justify-content:center;height:30px;padding:0 9px;
+  border-radius:8px;border:1px solid var(--line2);background:var(--hover);
   color:var(--dim);font-size:11.5px;cursor:pointer;transition:.14s;font-family:var(--font);white-space:nowrap}
 .btn:hover{background:var(--hover2);color:var(--txt)}
 .btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-txt)}
-.btn.ico{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;padding:0}
+.btn.ico{width:30px;padding:0}
 .btn.ico svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round}
 #lang{font-family:var(--mono);font-weight:600;letter-spacing:.03em;min-width:34px}
+
+/* ---------- nawigacja po kamieniach milowych ---------- */
+/* jedna pigulka „‹ Kamienie ›”: obie strzalki wygladaja tak samo i dziela jeden
+   podpis, zamiast wersji, w ktorej podpis wisial tylko przy strzalce w prawo */
+.mnav{display:inline-flex;align-items:stretch;height:30px;border:1px solid var(--line2);
+  border-radius:8px;background:var(--hover);overflow:hidden}
+.mnav-b{display:inline-flex;align-items:center;justify-content:center;width:27px;padding:0;
+  border:0;background:transparent;color:var(--dim);cursor:pointer;transition:.14s}
+.mnav-b:hover{background:var(--hover2);color:var(--txt)}
+.mnav-b:active{background:var(--accent-soft);color:var(--accent-txt)}
+/* obwodka focusu na zewnatrz zostalaby przycieta przez overflow pigulki */
+.mnav-b:focus-visible{outline-offset:-2px}
+.mnav-b svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+.mnav-t{display:flex;align-items:center;padding:0 10px;font-size:11.5px;color:var(--dim);
+  white-space:nowrap;user-select:none;
+  border-left:1px solid var(--line2);border-right:1px solid var(--line2)}
 
 /* ---------- panel wynikow wyszukiwania ---------- */
 /* z-index ponad panelem wydania (80): klikniecie w wynik otwiera panel,
@@ -268,7 +287,9 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
   background:var(--accent-soft);border-radius:3px;pointer-events:none}
 
 /* ---------- panel ---------- */
-#panel{position:fixed;top:0;right:0;bottom:0;width:min(460px,92vw);z-index:80;
+/* panel zaczyna sie pod naglowkiem (--hd-h ustawia ustawNakladki), inaczej
+   zaslanialby strzalki nawigacji, wyszukiwarke i przelaczniki w prawym rogu */
+#panel{position:fixed;top:var(--hd-h,0px);right:0;bottom:0;width:min(460px,92vw);z-index:80;
   background:var(--panel-grad);border-left:1px solid var(--line2);
   box-shadow:-24px 0 60px rgba(0,0,0,.28);transform:translateX(102%);transition:transform .22s cubic-bezier(.4,0,.2,1);
   display:flex;flex-direction:column}
@@ -337,7 +358,7 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
   outline:none;cursor:pointer}
 #tcount{margin-left:auto;font-size:11px;color:var(--dim);font-family:var(--mono);white-space:nowrap}
 #tlang{flex:none;font-family:var(--mono);font-weight:600;letter-spacing:.03em;min-width:34px}
-#tclose{flex:none;width:28px;height:28px;border-radius:7px;border:1px solid var(--line2);
+#tclose{flex:none;width:30px;height:30px;border-radius:7px;border:1px solid var(--line2);
   background:var(--hover);color:var(--dim);cursor:pointer;font-size:14px;line-height:1}
 #tclose:hover{color:var(--txt);background:var(--hover2)}
 #tblBody{flex:1 1 auto;overflow:auto;scrollbar-color:var(--scroll) transparent}
@@ -404,8 +425,13 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
         <input id="q" autocomplete="off" spellcheck="false">
         <span id="qinfo"></span>
       </div>
-      <button class="btn" id="prevM">◀</button>
-      <button class="btn" id="nextM"></button>
+      <div class="mnav">
+        <button class="mnav-b" id="prevM" type="button">
+          <svg viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+        <span class="mnav-t" id="mnavT"></span>
+        <button class="mnav-b" id="nextM" type="button">
+          <svg viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+      </div>
       <button class="btn on" id="tglLanes"></button>
       <button class="btn" id="tglTable"></button>
       <button class="btn ico" id="theme"></button>
@@ -696,7 +722,9 @@ function renderChrome() {
   q.setAttribute("aria-label", U.searchAria);
   $("#prevM").title = U.prevMile;
   $("#nextM").title = U.nextMile;
-  $("#nextM").textContent = U.milesBtn + " ▶";
+  $("#prevM").setAttribute("aria-label", U.prevMile);
+  $("#nextM").setAttribute("aria-label", U.nextMile);
+  $("#mnavT").textContent = U.milesBtn;
   $("#tglLanes").textContent = U.lanesBtn;
   $("#tglLanes").title = U.lanesTitle;
   $("#pclose").title = U.close;
@@ -724,6 +752,7 @@ function renderAll() {
   renderMiles();
   renderLanes();
   renderChrome();
+  ustawNakladki();     // zmiana jezyka potrafi zmienic wysokosc naglowka
   applyFilter();
   layout();
   drawMini();
@@ -803,7 +832,7 @@ function openPanel(i, keepScroll) {
   }).join("");
   $("#pbody").scrollTop = przed;
   $("#panel").classList.add("open");
-  ustawWyniki();
+  ustawNakladki();
 }
 
 /* podświetlenie: szukamy w znormalizowanym tekście, podmieniamy w wyrenderowanym */
@@ -826,7 +855,7 @@ $("#pclose").onclick = () => {
   $("#panel").classList.remove("open");
   document.querySelectorAll(".col.sel").forEach(c => c.classList.remove("sel"));
   sel = -1;
-  ustawWyniki();
+  ustawNakladki();
 };
 $("#rowBars").addEventListener("click", e => { const c = e.target.closest(".col"); if (c) openPanel(+c.dataset.i); });
 $("#rowMile").addEventListener("click", e => { const c = e.target.closest(".mcard"); if (c) { openPanel(+c.dataset.i); centerOn(+c.dataset.i); } });
@@ -855,11 +884,14 @@ $("#rowBars").addEventListener("mouseleave", () => tip.classList.remove("on"));
 const MAXRES = 400, SNIP = 130;
 let hits = [], hitRel = [], hitAt = -1;
 
-/* lista wynikow jest fixed, wiec jej gora i bok musza nadazac za naglowkiem
-   i za panelem wydania */
-function ustawWyniki() {
+/* lista wynikow i panel wydania sa fixed, wiec musza nadazac za wysokoscia
+   naglowka (ta zmienia sie przy zawijaniu na waskim ekranie i przy zmianie
+   jezyka). Oba zaczynaja sie pod naglowkiem, zeby go nigdy nie zaslonily */
+function ustawNakladki() {
+  const dol = Math.round($("#hd").getBoundingClientRect().bottom);
+  document.documentElement.style.setProperty("--hd-h", dol + "px");
   const box = $("#results");
-  box.style.top = Math.round($("#hd").getBoundingClientRect().bottom + 6) + "px";
+  box.style.top = (dol + 6) + "px";
   box.classList.toggle("obok", $("#panel").classList.contains("open"));
 }
 
@@ -951,7 +983,7 @@ function selectRes(k) {
   row.classList.add("on");
   row.scrollIntoView({ block: "nearest" });
   const i = +row.dataset.i;
-  centerOn(i); openPanel(i);
+  openPanel(i); centerOn(i);      // najpierw panel: centrowanie liczy jego szerokosc
 }
 $("#q").addEventListener("keydown", e => {
   if (e.key === "ArrowDown") { e.preventDefault(); selectRes(hitAt + 1); }
@@ -1007,15 +1039,33 @@ function smoothTo(target) {
   };
   animRAF = requestAnimationFrame(step);
 }
-function centerOn(i) { smoothTo(x(i) - sc.clientWidth / 2); }
-let mAt = -1;
+// przy otwartym panelu centrujemy w wolnej czesci ekranu, zeby karta kamienia
+// nie wyladowala pod panelem. Na waskim ekranie panel zajmuje prawie calosc,
+// wiec wtedy wracamy do zwyklego srodka
+function centerOn(i) {
+  const p = $("#panel");
+  const wolne = sc.clientWidth - (p.classList.contains("open") ? p.offsetWidth : 0);
+  smoothTo(x(i) - (wolne > 420 ? wolne : sc.clientWidth) / 2);
+}
+// krok liczymy od aktualnie wybranego kamienia, o ile jest widoczny na ekranie.
+// Sam srodek ekranu nie wystarcza: strona startuje na koncu osi, gdzie przewijanie
+// jest juz zacisniete, wiec „nastepny” w kolko wskazywalby ten sam ostatni kamien.
+// Z koncow listy przechodzimy na drugi koniec, zeby strzalka nigdy nie byla martwa.
 function gotoMile(dir) {
   const idxs = M.map(m => m.i);
-  const cx = sc.scrollLeft + sc.clientWidth / 2;
-  if (dir > 0) mAt = idxs.findIndex(i => x(i) > cx + 4);
-  else { const c = idxs.filter(i => x(i) < cx - 4); mAt = c.length ? idxs.indexOf(c[c.length - 1]) : -1; }
-  if (mAt < 0) mAt = dir > 0 ? 0 : idxs.length - 1;
-  centerOn(idxs[mAt]); openPanel(idxs[mAt]);
+  const teraz = idxs.indexOf(sel);
+  const px = teraz >= 0 ? x(idxs[teraz]) : -1;
+  let k;
+  if (teraz >= 0 && px > sc.scrollLeft && px < sc.scrollLeft + sc.clientWidth) {
+    k = teraz + dir;
+  } else {
+    const cx = sc.scrollLeft + sc.clientWidth / 2;
+    if (dir > 0) k = idxs.findIndex(i => x(i) > cx + 4);
+    else { const c = idxs.filter(i => x(i) < cx - 4); k = c.length ? idxs.indexOf(c[c.length - 1]) : -1; }
+    if (k < 0) k = dir > 0 ? 0 : idxs.length - 1;
+  }
+  k = (k + idxs.length) % idxs.length;
+  openPanel(idxs[k]); centerOn(idxs[k]);
 }
 $("#nextM").onclick = () => gotoMile(1);
 $("#prevM").onclick = () => gotoMile(-1);
@@ -1201,8 +1251,8 @@ $("#tbody").addEventListener("click", e => {
   if (!tr) return;
   const i = +tr.dataset.i;
   tblClose();
-  centerOn(i);
   openPanel(i);
+  centerOn(i);
 });
 
 /* ---------- minimapa ---------- */
@@ -1284,9 +1334,8 @@ function layout() {
 
 /* ---------- start ---------- */
 $("#track").style.width = WFULL + "px";
-addEventListener("resize", () => { layout(); drawMini(); syncWin(); ustawWyniki(); });
-renderAll();
-ustawWyniki();
+addEventListener("resize", () => { layout(); drawMini(); syncWin(); ustawNakladki(); });
+renderAll();                       // renderAll ustawia też --hd-h dla nakładek
 // wejście pokazuje najnowsze wydania: skok bez animacji, zanim użytkownik zdąży
 // spojrzeć. Home wraca na początek osi, End znów na koniec.
 sc.scrollLeft = sc.scrollWidth;
