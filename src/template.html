@@ -443,7 +443,7 @@ a.hd-brand:hover #sub{text-decoration:underline}
 #nlModal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;
   justify-content:center;padding:18px;background:rgba(0,0,0,.45)}
 #nlModal[hidden]{display:none}
-#nlBox{position:relative;width:min(420px,100%);padding:20px 22px 18px;border-radius:14px;
+#nlBox{position:relative;width:min(420px,100%);padding:20px 22px 18px;border-radius:14px;max-height:calc(100vh - 36px);overflow-y:auto;
   background:var(--panel-grad);border:1px solid var(--line2);box-shadow:var(--shadow-lg)}
 #nlX{position:absolute;top:12px;right:14px;width:26px;height:26px;border-radius:7px;
   border:1px solid var(--line2);background:var(--hover);color:var(--dim);
@@ -474,6 +474,18 @@ a.hd-brand:hover #sub{text-decoration:underline}
 #nlMsg:empty{margin-top:0}
 #nlDoneT{font-size:16px;font-weight:650;letter-spacing:-.01em;margin:0 34px 6px 0}
 #nlDoneD{margin:0;font-size:12.5px;color:var(--dim);line-height:1.55}
+/* Telegram: druga droga do tych samych wydan. Blok stoi poza #nlForm i #nlDone,
+   bo nlSukces() chowa formularz, a kanal ma zostac widoczny takze po zapisie */
+#tgWrap{margin-top:16px;padding-top:14px;border-top:1px solid var(--line2);
+  display:flex;flex-direction:column;gap:8px}
+#tgOr{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim2)}
+#tgLink{display:flex;align-items:center;justify-content:center;gap:8px;height:36px;
+  border-radius:9px;border:1px solid var(--line2);background:var(--surface);
+  color:var(--txt);font-size:13px;font-weight:600;text-decoration:none;transition:.14s}
+#tgLink:hover{border-color:var(--accent);background:var(--hover2)}
+#tgLink:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#tgLink svg{flex:none;width:15px;height:15px;fill:currentColor;stroke:none}
+#tgNote{font-size:11.5px;color:var(--dim);line-height:1.5}
 
 /* miedzy 1180 a 1500 px 12 chipow lamalo sie na trzy linie: chipy i statystyki
    schodza o pol punktu, zeby legenda zmiescila sie w dwoch. Ponizej 1180 znika */
@@ -614,6 +626,14 @@ a.hd-brand:hover #sub{text-decoration:underline}
       <div id="nlDone" hidden>
         <h2 id="nlDoneT"></h2>
         <p id="nlDoneD"></p>
+      </div>
+      <div id="tgWrap">
+        <span id="tgOr"></span>
+        <a id="tgLink" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.9 4.3 18.6 20c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 9-8.1c.4-.3-.1-.5-.6-.2L6.3 13.5l-4.7-1.5c-1-.3-1-1 .2-1.5L20.6 3c.9-.3 1.6.2 1.3 1.3z"/></svg>
+          <span id="tgCta"></span>
+        </a>
+        <small id="tgNote"></small>
       </div>
     </div>
   </div>
@@ -1471,6 +1491,7 @@ function layout() {
 // zamiast przekierowania, dzięki czemu modal zna prawdziwy wynik. Lista ma
 // double opt-in, więc sukces znaczy „poszedł link potwierdzający”, nie „zapisano”.
 const NL_URL = "/sendy/subscribe";
+const TG_URL = "https://t.me/claude_code_pl";   // kanal z tymi samymi wydaniami
 const NL_LISTA = "Ty1TI6ayPZpGzayzEajXfA";
 const NL_PO_MS = 20000;                        // ile czekamy, zanim wysunie się belka
 const NL_SEN_MS = 14 * 24 * 60 * 60 * 1000;    // jak długo śpi belka zdjęta krzyżykiem
@@ -1495,6 +1516,11 @@ function nlChrome() {
   $("#nlGo").textContent = U.nlSubmit;
   $("#nlDoneT").textContent = U.nlOkTitle;
   $("#nlDoneD").textContent = U.nlOkText;
+  $("#tgOr").textContent = U.tgOr;
+  $("#tgCta").textContent = U.tgCta;
+  $("#tgNote").textContent = U.tgNote;
+  $("#tgLink").href = TG_URL;
+  $("#tgLink").setAttribute("aria-label", U.tgAria);
   $("#nlMsg").textContent = "";                // komunikat w starym języku myli
 }
 

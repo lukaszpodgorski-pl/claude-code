@@ -95,6 +95,12 @@ UI = {
         "nlErrEmail": "To nie wygląda na poprawny adres e-mail.",
         "nlErrDup": "Ten adres jest już na liście.",
         "nlErrGeneric": "Nie udało się zapisać. Spróbuj ponownie za chwilę.",
+        # Telegram: druga droga do tych samych wydań, bez formularza i bez zgody
+        "tgOr": "albo bez zapisu",
+        "tgCta": "Bądź na bieżąco na Telegramie",
+        "tgNote": "Kanał po polsku. Te same wydania, wprost na telefon, "
+                  "bez podawania adresu.",
+        "tgAria": "Otwórz kanał Telegrama w nowej karcie",
     },
     "en": {
         "title": "Claude Code Timeline",
@@ -168,6 +174,12 @@ UI = {
         "nlErrEmail": "That does not look like a valid email address.",
         "nlErrDup": "That address is already on the list.",
         "nlErrGeneric": "Could not sign you up. Please try again in a moment.",
+        # Telegram: druga droga do tych samych wydań, bez formularza i bez zgody
+        "tgOr": "or skip the sign-up",
+        "tgCta": "Live updates on Telegram",
+        "tgNote": "The channel is in Polish. Same releases, straight to your phone, "
+                  "no email address needed.",
+        "tgAria": "Open the Telegram channel in a new tab",
     },
 }
 
