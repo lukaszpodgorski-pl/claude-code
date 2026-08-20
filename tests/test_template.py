@@ -25,6 +25,12 @@ SENDY_LISTA = "Ty1TI6ayPZpGzayzEajXfA"
 POLITYKA = "https://lukaszpodgorski.pl/polityka-prywatnosci/"
 CZTERNASCIE_DNI = r"14\s*\*\s*24\s*\*\s*60\s*\*\s*60\s*\*\s*1000"
 
+# tekst belki ma sie wyrozniac, przycisk stoi tuz przy nim, a na prawy skraj
+# odsuwa sie tylko krzyzyk
+RX_TEKST_WYROZNIONY = r"#nlBarText\{[^}]*font-weight:6"
+RX_KRZYZYK_NA_PRAWO = r"#nlBarX\{[^}]*margin-left:auto"
+RX_CTA_PRZY_TEKSCIE = r"#nlBarCta\{[^}]*margin-left:auto"
+
 
 @pytest.fixture(scope="module")
 def szablon():
@@ -84,3 +90,17 @@ def test_zamknieta_belka_spi_czternascie_dni(szablon):
 
 def test_szablon_linkuje_polityke_prywatnosci(szablon):
     assert POLITYKA in szablon
+
+
+def test_tekst_belki_jest_wyrozniony(szablon):
+    assert re.search(RX_TEKST_WYROZNIONY, szablon)
+
+
+def test_przycisk_belki_stoi_przy_tekscie_a_krzyzyk_na_prawym_skraju(szablon):
+    assert re.search(RX_KRZYZYK_NA_PRAWO, szablon)
+    assert not re.search(RX_CTA_PRZY_TEKSCIE, szablon), "CTA odsuwa sie na prawo"
+
+
+def test_belka_nie_wraca_do_kogos_kto_juz_jest_na_liscie(szablon):
+    """Sendy odpowiada „Already subscribed.” - to tez znaczy, ze nie ma o co pytac."""
+    assert szablon.count("setItem(LS_NL_DONE") == 2

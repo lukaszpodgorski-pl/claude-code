@@ -419,11 +419,14 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
   background:var(--accent-soft);font-size:12.5px;color:var(--txt);line-height:1.4;
   transition:margin-top .26s cubic-bezier(.4,0,.2,1)}
 #nlBar.show{display:flex}
-#nlBarText{flex:1 1 240px;min-width:0}
-#nlBarCta{flex:none;margin-left:auto;border-color:var(--accent);
-  color:var(--accent-txt);background:var(--surface)}
-#nlBarX{flex:none;width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);
-  background:transparent;color:var(--dim);cursor:pointer;font-size:13px;line-height:1}
+/* „flex:0 1 auto” zamiast rozciagania: tekst bierze tyle, ile potrzebuje,
+   dzieki czemu przycisk stoi tuz przy nim, a nie na drugim koncu paska */
+#nlBarText{flex:0 1 auto;font-weight:600;font-size:13px}
+#nlBarCta{flex:none;border-color:var(--accent);color:var(--accent-txt);background:var(--surface)}
+/* na prawy skraj odsuwa sie tylko krzyzyk */
+#nlBarX{flex:none;margin-left:auto;width:26px;height:26px;border-radius:7px;
+  border:1px solid var(--line2);background:transparent;color:var(--dim);
+  cursor:pointer;font-size:13px;line-height:1}
 #nlBarX:hover{color:var(--txt);background:var(--hover2)}
 
 /* modal ponad tabela (95): przycisk newslettera dziala takze przy otwartej tabeli */
@@ -1523,9 +1526,11 @@ function nlClose() {
 
 /* Sendy odpowiada zdaniem po angielsku; mapujemy dwa przypadki, które
    użytkownik może sam naprawić, reszta idzie na komunikat ogólny */
+const NL_JUZ_RX = /already subscribed/i;
+
 function nlBlad(odp) {
+  if (NL_JUZ_RX.test(odp)) return U.nlErrDup;
   const s = odp.toLowerCase();
-  if (s.indexOf("already") > -1) return U.nlErrDup;
   if (s.indexOf("email") > -1 || s.indexOf("invalid") > -1) return U.nlErrEmail;
   return U.nlErrGeneric;
 }
@@ -1559,6 +1564,11 @@ $("#nlForm").addEventListener("submit", async e => {
     });
     const tresc = (await odp.text()).trim();
     if (odp.ok && tresc === "1") { nlSukces(); return; }
+    // „Already subscribed.” też znaczy, że ktoś jest na liście: nie ma o co pytać
+    if (odp.ok && NL_JUZ_RX.test(tresc)) {
+      localStorage.setItem(LS_NL_DONE, "1");
+      nlBarUkryj(false);
+    }
     $("#nlMsg").textContent = nlBlad(tresc);
   } catch (err) {
     $("#nlMsg").textContent = U.nlErrGeneric;

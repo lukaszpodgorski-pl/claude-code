@@ -10,7 +10,9 @@ import re
 
 import pytest
 
-from test_template import CZTERNASCIE_DNI, POLITYKA, SENDY_ENDPOINT, SENDY_LISTA
+from test_template import (CZTERNASCIE_DNI, POLITYKA, RX_CTA_PRZY_TEKSCIE,
+                           RX_KRZYZYK_NA_PRAWO, RX_TEKST_WYROZNIONY,
+                           SENDY_ENDPOINT, SENDY_LISTA)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STRONA = os.path.join(os.path.dirname(HERE), "public", "claude-code", "index.html")
@@ -49,6 +51,20 @@ def test_zamknieta_belka_spi_czternascie_dni(strona):
 
 def test_strona_linkuje_polityke_prywatnosci(strona):
     assert POLITYKA in strona
+
+
+def test_tekst_belki_jest_wyrozniony(strona):
+    assert re.search(RX_TEKST_WYROZNIONY, strona)
+
+
+def test_przycisk_belki_stoi_przy_tekscie_a_krzyzyk_na_prawym_skraju(strona):
+    assert re.search(RX_KRZYZYK_NA_PRAWO, strona)
+    assert not re.search(RX_CTA_PRZY_TEKSCIE, strona), "CTA odsuwa sie na prawo"
+
+
+def test_belka_nie_wraca_do_kogos_kto_juz_jest_na_liscie(strona):
+    """Sendy odpowiada „Already subscribed.” - to tez znaczy, ze nie ma o co pytac."""
+    assert strona.count("setItem(LS_NL_DONE") == 2
 
 
 def test_teksty_newslettera_sa_w_obu_jezykach(strona):
