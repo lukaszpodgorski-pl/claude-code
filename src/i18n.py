@@ -101,6 +101,9 @@ UI = {
         "tgNote": "Kanał po polsku. Te same wydania, wprost na telefon, "
                   "bez podawania adresu.",
         "tgAria": "Otwórz kanał Telegrama w nowej karcie",
+        "tgBtn": "Włącz powiadomienia",
+        "tgBtnTitle": "Kanał Telegrama z nowymi wydaniami, po polsku",
+        "nlBarTg": "Telegram",
     },
     "en": {
         "title": "Claude Code Timeline",
@@ -180,6 +183,9 @@ UI = {
         "tgNote": "The channel is in Polish. Same releases, straight to your phone, "
                   "no email address needed.",
         "tgAria": "Open the Telegram channel in a new tab",
+        "tgBtn": "Turn on notifications",
+        "tgBtnTitle": "Telegram channel with new releases, in Polish",
+        "nlBarTg": "Telegram",
     },
 }
 
