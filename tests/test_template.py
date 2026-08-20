@@ -59,6 +59,32 @@ def test_szablon_linkuje_do_strony_glownej(szablon):
     assert "https://lukaszpodgorski.pl" in szablon
 
 
+def test_naglowek_ma_dwa_wiersze(szablon):
+    """Legenda w jednym rzedzie z marka i paskiem narzedzi lamala sie na cztery
+    linie i pchala cala os w dol. Ma wlasny wiersz."""
+    assert szablon.count('class="hd-row') == 2
+    assert "hd-row2" in szablon
+
+
+def test_statystyki_stoja_w_drugim_wierszu_obok_legendy(szablon):
+    assert 'id="stats"' in szablon
+    assert szablon.index('id="stats"') < szablon.index('id="legend"')
+
+
+def test_legenda_miesci_sie_w_dwoch_rzedach_na_laptopie(szablon):
+    """Miedzy 1180 a 1500 px 12 chipow lamalo sie na trzy rzedy. Chipy scieniaja
+    sie od 1500 px, a od 1350 px statystyki oddaja im cala szerokosc.
+    Ponizej 1180 px legenda i tak znika, wiec statystyki wracaja."""
+    assert re.search(r"@media \(max-width:1500px\)", szablon)
+    assert re.search(r"@media \(min-width:1181px\) and \(max-width:1350px\)", szablon)
+
+
+def test_link_do_marki_jest_widoczny_pod_tytulem(szablon):
+    """Nie sam tooltip: adres ma byc na wierzchu, w kolorze akcentu."""
+    assert re.search(r"#sub\{[^}]*color:var\(--accent-txt\)", szablon)
+    assert re.search(r"\bU\.brand\b", szablon)
+
+
 def test_szablon_ma_przycisk_belke_i_modal_newslettera(szablon):
     for element in ('id="nlBtn"', 'id="nlBar"', 'id="nlModal"'):
         assert element in szablon, element

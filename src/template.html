@@ -116,8 +116,14 @@ body{
   var(--bg);}
 
 /* ---------- header ---------- */
-#hd{flex:none;display:flex;align-items:center;gap:18px;padding:10px 18px 9px;
+/* dwa wiersze: marka i narzedzia u gory, statystyki i legenda pod spodem.
+   W jednym rzedzie legenda dostawala resztke szerokosci i lamala sie
+   na cztery linie, przez co naglowek puchl do 150 px */
+#hd{flex:none;display:flex;flex-direction:column;gap:7px;padding:9px 18px 8px;
     border-bottom:1px solid var(--line);background:var(--hd-bg);backdrop-filter:blur(14px);z-index:40}
+.hd-row{display:flex;align-items:center;gap:18px}
+.hd-row2{gap:14px}
+#stats{flex:none;font-size:11px;color:var(--dim);font-family:var(--mono);white-space:nowrap}
 .hd-brand{display:flex;align-items:center;gap:11px;flex:none}
 a.hd-brand{text-decoration:none;color:inherit;transition:opacity .14s}
 a.hd-brand:hover{opacity:.78}
@@ -125,7 +131,9 @@ a.hd-brand:hover{opacity:.78}
   background:linear-gradient(150deg,var(--accent),#8f4a33);box-shadow:0 3px 14px rgba(192,92,54,.34)}
 .mark svg{width:17px;height:17px;fill:#fff}
 h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
-#sub{margin:1px 0 0;font-size:11px;color:var(--dim);white-space:nowrap;font-family:var(--mono)}
+/* adres marki na wierzchu, nie w tooltipie: ma sie opatrzec czytelnikowi */
+#sub{margin:1px 0 0;font-size:11.5px;color:var(--accent-txt);white-space:nowrap;font-family:var(--mono)}
+a.hd-brand:hover #sub{text-decoration:underline}
 #legend{display:flex;flex-wrap:wrap;gap:4px 5px;flex:1 1 auto;min-width:0;justify-content:center}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 6px;border-radius:999px;
   border:1px solid var(--line2);background:var(--hover);font-size:11px;color:var(--dim);
@@ -134,7 +142,9 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
 .chip .sw{width:9px;height:9px;border-radius:3px;flex:none}
 .chip.off{opacity:.34}
 .chip.solo{border-color:currentColor;background:var(--hover2);color:var(--txt)}
-.hd-tools{display:flex;align-items:center;gap:7px;flex:none;position:relative}
+/* margin-left:auto, bo do prawej dosuwala je wczesniej rozciagliwa legenda,
+   ktora przeniosla sie do drugiego wiersza */
+.hd-tools{display:flex;align-items:center;gap:7px;flex:none;margin-left:auto;position:relative}
 #qwrap{position:relative;display:flex;align-items:center;gap:7px}
 #q{width:200px;padding:6px 10px;border-radius:8px;border:1px solid var(--line2);
    background:var(--surface);color:var(--txt);font-size:12px;font-family:var(--font);outline:none}
@@ -465,10 +475,23 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
 #nlDoneT{font-size:16px;font-weight:650;letter-spacing:-.01em;margin:0 34px 6px 0}
 #nlDoneD{margin:0;font-size:12.5px;color:var(--dim);line-height:1.55}
 
+/* miedzy 1180 a 1500 px 12 chipow lamalo sie na trzy linie: chipy i statystyki
+   schodza o pol punktu, zeby legenda zmiescila sie w dwoch. Ponizej 1180 znika */
+@media (max-width:1500px){
+  .chip{font-size:10.5px;padding:2px 7px 2px 5px;gap:4px}
+  .chip .sw{width:8px;height:8px}
+  #stats{font-size:10.5px}
+}
+/* od 1350 px w dol same chipy juz nie wystarcza: statystyki oddaja legendzie
+   cala szerokosc drugiego wiersza. Ponizej 1180 legenda znika, wiec wracaja */
+@media (min-width:1181px) and (max-width:1350px){#stats{display:none}}
 @media (max-width:1180px){#legend{display:none}}
-@media (max-width:820px){#q{width:130px}#sub{display:none}#tblTitle{display:none}#tsel{max-width:132px}
-  #hd{flex-wrap:wrap;gap:8px 12px}
+@media (max-width:820px){#q{width:130px}#tblTitle{display:none}#tsel{max-width:132px}
+  .hd-row{flex-wrap:wrap;gap:8px 12px}
   .hd-tools{flex:1 1 100%;flex-wrap:wrap;justify-content:flex-end}}
+/* ponizej 620 px drugi wiersz nie ma juz czego pokazac: legenda schowana,
+   a statystyki i tak nie zmieszcza sie w jednej linii */
+@media (max-width:620px){.hd-row2{display:none}}
 </style>
 
 <div id="app">
@@ -480,7 +503,10 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
     <button id="nlBarX" type="button">✕</button>
   </div>
 
+  <!-- dwa wiersze, bo legenda w jednym rzedzie z marka i paskiem narzedzi
+       lamala sie na cztery linie i spychala cala os w dol -->
   <header id="hd">
+   <div class="hd-row">
     <a class="hd-brand" id="home" href="https://lukaszpodgorski.pl">
       <div class="mark"><svg viewBox="0 0 24 24"><path d="M5 3v18h2v-7.2l11-3.3-11-3.3V3z"/></svg></div>
       <div>
@@ -488,7 +514,6 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
         <p id="sub"></p>
       </div>
     </a>
-    <div id="legend"></div>
     <div class="hd-tools">
       <div id="qwrap">
         <input id="q" autocomplete="off" spellcheck="false">
@@ -507,6 +532,11 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
       <button class="btn ico" id="theme"></button>
       <button class="btn" id="lang"></button>
     </div>
+   </div>
+   <div class="hd-row hd-row2">
+    <span id="stats"></span>
+    <div id="legend"></div>
+   </div>
   </header>
 
   <!-- poza naglowkiem celowo: naglowek jest elementem flex z z-index, wiec tworzy
@@ -805,12 +835,13 @@ function renderChrome() {
   $("#legend").innerHTML = T.map((t, i) =>
     `<span class="chip" data-t="${i}" style="color:${tc(i)}"><span class="sw" style="background:${tc(i)}"></span>${esc(tlabel(i))}</span>`).join("");
 
-  $("#sub").textContent = fill(U.subtitle, {
+  $("#stats").textContent = fill(U.stats, {
     r: R.length, rw: plural(R.length, U.releases),
     e: DATA.meta.entries, ew: plural(DATA.meta.entries, U.changes),
     v1: R[0][0], v2: R[R.length - 1][0],
     d1: fmtDate(R[0][1]), d2: fmtDate(R[R.length - 1][1]),
   });
+  $("#sub").textContent = U.brand;
 
   document.documentElement.lang = U.htmlLang;
   document.title = U.title;

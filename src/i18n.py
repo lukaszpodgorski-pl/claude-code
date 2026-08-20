@@ -65,7 +65,9 @@ UI = {
         "hint": "Przewijaj kółkiem w bok · <kbd>←</kbd><kbd>→</kbd> ruch · "
                 "<kbd>N</kbd> następny kamień milowy · <kbd>/</kbd> szukaj · "
                 "kliknij słupek po szczegóły",
-        "subtitle": "{r} {rw} · {e} {ew} · {v1} → {v2} · {d1} → {d2}",
+        # widoczny podpis pod tytułem: adres ma się opatrzeć, nie chować w tooltipie
+        "brand": "lukaszpodgorski.pl",
+        "stats": "{r} {rw} · {e} {ew} · {v1} → {v2} · {d1} → {d2}",
         "milestone": "Kamień milowy",
         "untranslated": "brak tłumaczenia, tekst oryginalny",
         "matchedIn": "szukana fraza trafiła w tej wersji językowej",
@@ -136,7 +138,9 @@ UI = {
         "hint": "Scroll sideways with the wheel · <kbd>←</kbd><kbd>→</kbd> move · "
                 "<kbd>N</kbd> next milestone · <kbd>/</kbd> search · "
                 "click a bar for details",
-        "subtitle": "{r} {rw} · {e} {ew} · {v1} → {v2} · {d1} → {d2}",
+        # widoczny podpis pod tytułem: adres ma się opatrzeć, nie chować w tooltipie
+        "brand": "lukaszpodgorski.pl",
+        "stats": "{r} {rw} · {e} {ew} · {v1} → {v2} · {d1} → {d2}",
         "milestone": "Milestone",
         "untranslated": "not translated, original text",
         "matchedIn": "the search phrase matched this language version",
