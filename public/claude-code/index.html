@@ -60,9 +60,69 @@ a.card .meta{margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--d
 footer{padding:22px;text-align:center;font-size:12px;color:var(--dim2);border-top:1px solid var(--line)}
 footer a{color:var(--dim);text-decoration:none}
 footer a:hover{text-decoration:underline}
+
+/* ---------- newsletter: belka, karta i modal ---------- */
+/* belka jest pierwszym elementem body i chowa sie ujemnym marginesem rownym
+   swojej wysokosci, wiec wysuwa sie naprawde, zamiast szarpnac cala strona */
+/* zawijanie z „flex:1 1 240px” na tekscie zalatwia waski ekran bez media query:
+   na szerokim wszystko stoi w jednej linii, na waskim tekst bierze cala szerokosc,
+   a przyciski schodza pod niego. Wysokosc jest wiec zmienna i ujemny margines,
+   ktory chowa belke nad krawedzia okna, liczy JS z pomiaru */
+#nlBar{display:none;align-items:center;flex-wrap:wrap;gap:8px 12px;flex:none;
+  padding:9px 14px 9px 18px;border-bottom:1px solid var(--line2);
+  background:var(--accent-soft);font-size:12.5px;color:var(--txt);line-height:1.4;
+  transition:margin-top .26s cubic-bezier(.4,0,.2,1)}
+#nlBar.show{display:flex}
+#nlBarText{flex:1 1 240px;min-width:0}
+#nlBarCta{flex:none;margin-left:auto;color:var(--accent);
+  border-color:var(--accent);background:var(--surface)}
+#nlBarX{flex:none;width:26px;height:26px;padding:0;font-size:13px;line-height:1}
+section.nl{margin-top:14px;background:var(--surface);border:1px solid var(--line2);
+  border-left:3px solid var(--accent);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+section.nl h2{margin:0 0 4px;font-size:16.5px;font-weight:640;letter-spacing:-.01em}
+section.nl p{margin:0 0 12px;color:var(--dim);font-size:13.5px}
+#nlBtn{color:var(--accent);border-color:var(--accent);font-size:13px;padding:7px 14px}
+
+#nlModal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;
+  justify-content:center;padding:18px;background:rgba(0,0,0,.45)}
+#nlModal[hidden]{display:none}
+#nlBox{position:relative;width:min(420px,100%);padding:20px 22px 18px;border-radius:14px;
+  background:var(--surface);border:1px solid var(--line2);box-shadow:var(--shadow-lg)}
+#nlX{position:absolute;top:12px;right:14px;width:26px;height:26px;padding:0;
+  border-radius:7px;font-size:14px;line-height:1}
+#nlH{margin:0 34px 6px 0;font-size:16px;font-weight:650;letter-spacing:-.01em}
+#nlLead{margin:0 0 14px;font-size:12.5px;color:var(--dim);line-height:1.55}
+#nlMailLab{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--dim);margin-bottom:5px}
+#nlMail{width:100%;padding:8px 11px;border-radius:9px;border:1px solid var(--line2);
+  background:var(--bg);color:var(--txt);font-size:13px;font-family:var(--font);outline:none}
+#nlMail:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+#nlMail::placeholder{color:var(--dim2)}
+/* honeypot Sendy: pole poza ekranem, ktore wypelniaja tylko boty */
+.nl-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+#nlZgoda{display:flex;align-items:flex-start;gap:8px;margin-top:12px;
+  font-size:11.5px;color:var(--dim);line-height:1.5}
+#nlGdpr{flex:none;margin:2px 0 0;width:14px;height:14px;accent-color:var(--accent)}
+#nlZgoda>div{flex:1 1 auto;min-width:0}
+#nlGdprTxt{cursor:pointer}
+#nlZgoda a{color:var(--accent)}
+#nlGo{width:100%;height:36px;margin-top:14px;border-radius:9px;border:1px solid var(--accent);
+  background:var(--accent);color:#fff;font-size:13px;font-weight:600}
+#nlGo:hover:not(:disabled){background:var(--accent);color:#fff;filter:brightness(1.08)}
+#nlGo:disabled{opacity:.6;cursor:default}
+#nlMsg{margin-top:10px;font-size:11.5px;line-height:1.5;color:var(--accent)}
+#nlMsg:empty{margin-top:0}
+#nlDoneT{margin:0 34px 6px 0;font-size:16px;font-weight:650;letter-spacing:-.01em}
+#nlDoneD{margin:0;font-size:12.5px;color:var(--dim);line-height:1.55}
 </style>
 </head>
 <body>
+<div id="nlBar">
+  <span id="nlBarText"></span>
+  <button id="nlBarCta" type="button"></button>
+  <button id="nlBarX" type="button">✕</button>
+</div>
+
 <main>
   <header>
     <div class="mark"><svg viewBox="0 0 24 24"><path d="M5 3v18h2v-7.2l11-3.3-11-3.3V3z"/></svg></div>
@@ -81,7 +141,41 @@ footer a:hover{text-decoration:underline}
     <p id="c1d"></p>
     <div class="meta" id="c1m"></div>
   </a>
+
+  <section class="nl">
+    <h2 id="nlCardT"></h2>
+    <p id="nlCardD"></p>
+    <button id="nlBtn" type="button"></button>
+  </section>
 </main>
+
+<div id="nlModal" hidden>
+  <div id="nlBox" role="dialog" aria-modal="true" aria-labelledby="nlH">
+    <button id="nlX" type="button">✕</button>
+    <h2 id="nlH"></h2>
+    <p id="nlLead"></p>
+    <form id="nlForm" novalidate>
+      <label id="nlMailLab" for="nlMail"></label>
+      <input id="nlMail" type="email" name="email" autocomplete="email" spellcheck="false">
+      <!-- honeypot Sendy: niewidoczne dla czlowieka, boty wypelniaja jak leci -->
+      <input id="nlHp" class="nl-hp" type="text" name="hp" tabindex="-1"
+             autocomplete="off" aria-hidden="true">
+      <div id="nlZgoda">
+        <input id="nlGdpr" type="checkbox" name="gdpr">
+        <!-- link poza etykieta: w jej srodku klikniecie w polityke przelaczalo tez zgode -->
+        <div><label for="nlGdpr" id="nlGdprTxt"></label>
+          <a id="nlPriv" href="https://lukaszpodgorski.pl/polityka-prywatnosci/"
+             target="_blank" rel="noopener"></a></div>
+      </div>
+      <button id="nlGo" type="submit"></button>
+      <div id="nlMsg" role="status"></div>
+    </form>
+    <div id="nlDone" hidden>
+      <h2 id="nlDoneT"></h2>
+      <p id="nlDoneD"></p>
+    </div>
+  </div>
+</div>
 
 <footer><span id="foot"></span></footer>
 
@@ -96,6 +190,25 @@ const S = {
     c1m: "aktualizowana automatycznie",
     foot: 'Łukasz Podgórski · <a href="https://lukaszpodgorski.pl">lukaszpodgorski.pl</a> · źródła: changelog Anthropic i rejestr npm',
     themeTitle: "Motyw: ", auto: "auto", light: "jasny", dark: "ciemny",
+    nlBtn: "Zapisz się",
+    nlBarText: "Zainteresowany tym tematem? Dołącz do mojego newslettera i bądź na bieżąco z tego typu nowościami.",
+    nlBarCta: "Kliknij tutaj",
+    nlBarClose: "Zamknij na 14 dni",
+    nlTitle: "Newsletter",
+    nlLead: "Piszę o Claude Code, AI i automatyzacji pracy. Jeden mail, gdy jest o czym. Wypisujesz się jednym kliknięciem.",
+    nlEmail: "Adres e-mail",
+    nlEmailPh: "ty@przyklad.pl",
+    nlConsent: "Zgadzam się na otrzymywanie newslettera i przetwarzanie mojego adresu w tym celu.",
+    nlPrivacy: "Polityka prywatności",
+    nlConsentReq: "Zaznacz zgodę, żeby kontynuować.",
+    nlSubmit: "Zapisz się",
+    nlSending: "Wysyłam…",
+    nlOkTitle: "Jeszcze jeden krok",
+    nlOkText: "Wysłałem link potwierdzający na podany adres. Kliknij go, żeby dokończyć zapis.",
+    nlErrEmail: "To nie wygląda na poprawny adres e-mail.",
+    nlErrDup: "Ten adres jest już na liście.",
+    nlErrGeneric: "Nie udało się zapisać. Spróbuj ponownie za chwilę.",
+    nlClose: "Zamknij (Esc)",
   },
   en: {
     lang: "en", btn: "PL", langTitle: "Przełącz na polski",
@@ -106,6 +219,25 @@ const S = {
     c1m: "updated automatically",
     foot: 'Łukasz Podgórski · <a href="https://lukaszpodgorski.pl">lukaszpodgorski.pl</a> · sources: the Anthropic changelog and the npm registry',
     themeTitle: "Theme: ", auto: "auto", light: "light", dark: "dark",
+    nlBtn: "Subscribe",
+    nlBarText: "Interested in this topic? Join my newsletter and keep up with news like this.",
+    nlBarCta: "Click here",
+    nlBarClose: "Dismiss for 14 days",
+    nlTitle: "Newsletter",
+    nlLead: "I write about Claude Code, AI and automating work. One email when there is something worth sending. One click to unsubscribe.",
+    nlEmail: "Email address",
+    nlEmailPh: "you@example.com",
+    nlConsent: "I agree to receive the newsletter and to my address being processed for that purpose.",
+    nlPrivacy: "Privacy policy",
+    nlConsentReq: "Tick the consent box to continue.",
+    nlSubmit: "Subscribe",
+    nlSending: "Sending…",
+    nlOkTitle: "One more step",
+    nlOkText: "I sent a confirmation link to that address. Click it to finish signing up.",
+    nlErrEmail: "That does not look like a valid email address.",
+    nlErrDup: "That address is already on the list.",
+    nlErrGeneric: "Could not sign you up. Please try again in a moment.",
+    nlClose: "Close (Esc)",
   },
 };
 const THEMES = ["auto", "light", "dark"];
@@ -126,6 +258,7 @@ function render() {
   else document.documentElement.setAttribute("data-theme", THEME);
   for (const k of ["h1", "lead", "c1t", "c1d", "c1m"]) $("#" + k).textContent = t[k];
   $("#foot").innerHTML = t.foot;
+  nlChrome(t);
   $("#lang").textContent = t.btn;
   $("#lang").title = t.langTitle;
   $("#theme").title = t.themeTitle + t[THEME];
@@ -138,7 +271,149 @@ function render() {
 $("#lang").onclick = () => { LANG = LANG === "pl" ? "en" : "pl"; localStorage.setItem("cct.lang", LANG); render(); };
 $("#theme").onclick = () => { THEME = THEMES[(THEMES.indexOf(THEME) + 1) % THEMES.length]; localStorage.setItem("cct.theme", THEME); render(); };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (THEME === "auto") render(); });
+
+/* ---------- newsletter ---------- */
+// Sendy stoi pod tym samym originem, więc zapis idzie zwykłym fetchem, bez CORS.
+// boolean=true każe Sendy odpowiedzieć gołym „1” zamiast przekierowania, dzięki
+// czemu modal zna prawdziwy wynik. Lista ma double opt-in, więc sukces znaczy
+// „poszedł link potwierdzający”, nie „zapisano”. Znaczniki w localStorage są
+// wspólne z osią czasu: to ten sam origin.
+const NL_URL = "/sendy/subscribe";
+const NL_LISTA = "Ty1TI6ayPZpGzayzEajXfA";
+const NL_PO_MS = 20000;                        // ile czekamy, zanim wysunie się belka
+const NL_SEN_MS = 14 * 24 * 60 * 60 * 1000;    // jak długo śpi belka zdjęta krzyżykiem
+const LS_NL_DONE = "cct.nl.done", LS_NL_SEN = "cct.nl.snooze";
+const MAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function nlChrome(t) {
+  $("#nlCardT").textContent = t.nlTitle;
+  $("#nlCardD").textContent = t.nlLead;
+  $("#nlBtn").textContent = t.nlBtn;
+  $("#nlBarText").textContent = t.nlBarText;
+  $("#nlBarCta").textContent = t.nlBarCta;
+  $("#nlBarX").title = t.nlBarClose;
+  $("#nlBarX").setAttribute("aria-label", t.nlBarClose);
+  $("#nlX").title = t.nlClose;
+  $("#nlX").setAttribute("aria-label", t.nlClose);
+  $("#nlH").textContent = t.nlTitle;
+  $("#nlLead").textContent = t.nlLead;
+  $("#nlMailLab").textContent = t.nlEmail;
+  $("#nlMail").placeholder = t.nlEmailPh;
+  $("#nlGdprTxt").textContent = t.nlConsent + " ";
+  $("#nlPriv").textContent = t.nlPrivacy;
+  $("#nlGo").textContent = t.nlSubmit;
+  $("#nlDoneT").textContent = t.nlOkTitle;
+  $("#nlDoneD").textContent = t.nlOkText;
+  $("#nlMsg").textContent = "";                // komunikat w starym języku myli
+}
+
+function nlOtwarty() { return !$("#nlModal").hasAttribute("hidden"); }
+
+/* belka nie wraca po zapisie, a zdjęta krzyżykiem śpi 14 dni. Oba znaczniki
+   siedzą w localStorage, więc wyczyszczenie danych witryny pyta od nowa */
+function nlSpi() {
+  if (localStorage.getItem(LS_NL_DONE)) return true;
+  const czas = +localStorage.getItem(LS_NL_SEN);
+  return !!czas && Date.now() - czas < NL_SEN_MS;
+}
+
+// belka znika z układu dopiero po animacji. Liczymy to z zegara, nie
+// z transitionend: w karcie w tle przejścia się nie odpalają
+const NL_ANIM_MS = 300;                        // 260 ms animacji plus zapas
+
+/* wysokość belki zależy od tego, w ilu liniach zmieści się tekst, więc ujemny
+   margines chowający ją nad krawędzią okna bierzemy z pomiaru, nie z CSS */
+function nlBarPokaz() {
+  const bar = $("#nlBar");
+  if (nlSpi() || bar.classList.contains("show")) return;
+  bar.classList.add("show");
+  bar.style.transition = "none";
+  bar.style.marginTop = -bar.offsetHeight + "px";
+  void bar.offsetHeight;                       // reflow rozdziela stan przed i po
+  bar.style.transition = "";
+  bar.style.marginTop = "0px";
+}
+
+function nlBarUkryj(uspij) {
+  const bar = $("#nlBar");
+  if (uspij) localStorage.setItem(LS_NL_SEN, String(Date.now()));
+  if (!bar.classList.contains("show")) return;
+  bar.style.marginTop = -bar.offsetHeight + "px";
+  setTimeout(() => { bar.classList.remove("show"); bar.style.marginTop = ""; }, NL_ANIM_MS);
+}
+
+let nlFokusPrzed = null;
+
+function nlOpen() {
+  if (nlOtwarty()) return;
+  nlFokusPrzed = document.activeElement;
+  $("#nlMsg").textContent = "";
+  $("#nlModal").removeAttribute("hidden");
+  $("#nlMail").focus();
+}
+
+function nlClose() {
+  $("#nlModal").setAttribute("hidden", "");
+  if (nlFokusPrzed && nlFokusPrzed.focus) nlFokusPrzed.focus();
+  nlFokusPrzed = null;
+}
+
+/* Sendy odpowiada zdaniem po angielsku; mapujemy dwa przypadki, które
+   użytkownik może sam naprawić, reszta idzie na komunikat ogólny */
+function nlBlad(odp) {
+  const s = odp.toLowerCase();
+  if (s.indexOf("already") > -1) return S[LANG].nlErrDup;
+  if (s.indexOf("email") > -1 || s.indexOf("invalid") > -1) return S[LANG].nlErrEmail;
+  return S[LANG].nlErrGeneric;
+}
+
+function nlSukces() {
+  localStorage.setItem(LS_NL_DONE, "1");
+  $("#nlLead").hidden = true;
+  $("#nlForm").hidden = true;
+  $("#nlDone").hidden = false;
+  nlBarUkryj(false);
+}
+
+$("#nlForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const t = S[LANG];
+  const mail = $("#nlMail").value.trim();
+  if (!MAIL_RX.test(mail)) { $("#nlMsg").textContent = t.nlErrEmail; $("#nlMail").focus(); return; }
+  if (!$("#nlGdpr").checked) { $("#nlMsg").textContent = t.nlConsentReq; $("#nlGdpr").focus(); return; }
+
+  const go = $("#nlGo");
+  go.disabled = true;
+  go.textContent = t.nlSending;
+  $("#nlMsg").textContent = "";
+  try {
+    const odp = await fetch(NL_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: new URLSearchParams({
+        email: mail, gdpr: "true", hp: $("#nlHp").value,
+        list: NL_LISTA, subform: "yes", boolean: "true", referrer: location.href,
+      }),
+    });
+    const tresc = (await odp.text()).trim();
+    if (odp.ok && tresc === "1") { nlSukces(); return; }
+    $("#nlMsg").textContent = nlBlad(tresc);
+  } catch (err) {
+    $("#nlMsg").textContent = t.nlErrGeneric;
+  }
+  go.disabled = false;
+  go.textContent = t.nlSubmit;
+});
+
+$("#nlBtn").onclick = nlOpen;
+$("#nlBarCta").onclick = () => { nlOpen(); nlBarUkryj(false); };
+$("#nlBarX").onclick = () => nlBarUkryj(true);
+$("#nlX").onclick = nlClose;
+$("#nlModal").addEventListener("click", e => { if (e.target === $("#nlModal")) nlClose(); });
+addEventListener("keydown", e => { if (e.key === "Escape" && nlOtwarty()) nlClose(); });
+
 render();
+if (!nlSpi()) setTimeout(nlBarPokaz, NL_PO_MS);
 </script>
 </body>
 </html>

@@ -51,7 +51,14 @@ inaczej `2.1.0` (90 wpisów) spłaszczyłoby wszystkie pozostałe wydania.
 | język, motyw | przyciski `PL`/`EN` i ikona motywu (auto → jasny → ciemny) |
 | szczegóły wydania | kliknięcie w słupek; `Esc` zamyka panel |
 | changelog w tabeli | przycisk „Tabela" albo `T`; `Esc` zamyka |
+| newsletter | przycisk „Newsletter" w nagłówku; `Esc` zamyka okno |
 | strona główna | kliknięcie w logo w lewym górnym rogu |
+
+Belka z zaproszeniem do newslettera wysuwa się nad nagłówkiem po 20 sekundach.
+Krzyżyk po prawej chowa ją na 14 dni, zapis chowa na stałe - oba znaczniki siedzą
+w `localStorage`, więc wyczyszczenie danych witryny zaczyna pytanie od nowa.
+Zapis idzie do Sendy pod tą samą domeną (`/sendy/subscribe`), lista ma
+double opt-in, więc adres wchodzi dopiero po kliknięciu linku z maila.
 
 Wybór języka i motywu zostaje w `localStorage`. Język można wymusić parametrem
 `?lang=en` albo `?lang=pl`.
@@ -83,5 +90,9 @@ that matches across both languages at once.
 
 The site updates itself: a daily job fetches the changelog, translates new entries,
 rebuilds the page and publishes it. Nothing changes on days without a release.
+
+A newsletter bar slides in after 20 seconds; dismissing it hides it for 14 days,
+subscribing hides it for good. Sign-ups go to a self-hosted Sendy on the same
+domain and use double opt-in.
 
 Data belongs to Anthropic; this repository only reorganises and translates it.

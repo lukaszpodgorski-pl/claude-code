@@ -69,6 +69,30 @@ UI = {
         "milestone": "Kamień milowy",
         "untranslated": "brak tłumaczenia, tekst oryginalny",
         "matchedIn": "szukana fraza trafiła w tej wersji językowej",
+        # newsletter: przycisk w nagłówku, belka po 20 s i modal z formularzem
+        "nlBtn": "Newsletter",
+        "nlBtnTitle": "Zapisz się do newslettera",
+        "nlBarText": "Zainteresowany tym tematem? Dołącz do mojego newslettera "
+                     "i bądź na bieżąco z tego typu nowościami.",
+        "nlBarCta": "Kliknij tutaj",
+        "nlBarClose": "Zamknij na 14 dni",
+        "nlTitle": "Newsletter",
+        "nlLead": "Piszę o Claude Code, AI i automatyzacji pracy. Jeden mail, gdy jest o czym. "
+                  "Wypisujesz się jednym kliknięciem.",
+        "nlEmail": "Adres e-mail",
+        "nlEmailPh": "ty@przyklad.pl",
+        "nlConsent": "Zgadzam się na otrzymywanie newslettera i przetwarzanie mojego adresu "
+                     "w tym celu.",
+        "nlPrivacy": "Polityka prywatności",
+        "nlConsentReq": "Zaznacz zgodę, żeby kontynuować.",
+        "nlSubmit": "Zapisz się",
+        "nlSending": "Wysyłam…",
+        "nlOkTitle": "Jeszcze jeden krok",
+        "nlOkText": "Wysłałem link potwierdzający na podany adres. Kliknij go, "
+                    "żeby dokończyć zapis.",
+        "nlErrEmail": "To nie wygląda na poprawny adres e-mail.",
+        "nlErrDup": "Ten adres jest już na liście.",
+        "nlErrGeneric": "Nie udało się zapisać. Spróbuj ponownie za chwilę.",
     },
     "en": {
         "title": "Claude Code Timeline",
@@ -116,6 +140,30 @@ UI = {
         "milestone": "Milestone",
         "untranslated": "not translated, original text",
         "matchedIn": "the search phrase matched this language version",
+        # newsletter: przycisk w nagłówku, belka po 20 s i modal z formularzem
+        "nlBtn": "Newsletter",
+        "nlBtnTitle": "Subscribe to the newsletter",
+        "nlBarText": "Interested in this topic? Join my newsletter and keep up "
+                     "with news like this.",
+        "nlBarCta": "Click here",
+        "nlBarClose": "Dismiss for 14 days",
+        "nlTitle": "Newsletter",
+        "nlLead": "I write about Claude Code, AI and automating work. One email when there is "
+                  "something worth sending. One click to unsubscribe.",
+        "nlEmail": "Email address",
+        "nlEmailPh": "you@example.com",
+        "nlConsent": "I agree to receive the newsletter and to my address being processed "
+                     "for that purpose.",
+        "nlPrivacy": "Privacy policy",
+        "nlConsentReq": "Tick the consent box to continue.",
+        "nlSubmit": "Subscribe",
+        "nlSending": "Sending…",
+        "nlOkTitle": "One more step",
+        "nlOkText": "I sent a confirmation link to that address. Click it to finish "
+                    "signing up.",
+        "nlErrEmail": "That does not look like a valid email address.",
+        "nlErrDup": "That address is already on the list.",
+        "nlErrGeneric": "Could not sign you up. Please try again in a moment.",
     },
 }
 

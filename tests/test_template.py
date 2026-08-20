@@ -18,6 +18,13 @@ import i18n  # noqa: E402
 
 TEMPLATE = os.path.join(os.path.dirname(HERE), "src", "template.html")
 
+# Sendy stoi pod tym samym originem co strona, wiec zapis idzie zwyklym fetchem.
+# Identyfikator listy jest jawny z zalozenia: siedzi w kazdym formularzu Sendy.
+SENDY_ENDPOINT = "/sendy/subscribe"
+SENDY_LISTA = "Ty1TI6ayPZpGzayzEajXfA"
+POLITYKA = "https://lukaszpodgorski.pl/polityka-prywatnosci/"
+CZTERNASCIE_DNI = r"14\s*\*\s*24\s*\*\s*60\s*\*\s*60\s*\*\s*1000"
+
 
 @pytest.fixture(scope="module")
 def szablon():
@@ -44,3 +51,36 @@ def test_szablon_ma_przycisk_i_naklad_tabeli(szablon):
 
 def test_szablon_linkuje_do_strony_glownej(szablon):
     assert "https://lukaszpodgorski.pl" in szablon
+
+
+def test_szablon_ma_przycisk_belke_i_modal_newslettera(szablon):
+    for element in ('id="nlBtn"', 'id="nlBar"', 'id="nlModal"'):
+        assert element in szablon, element
+
+
+def test_szablon_wysyla_zapis_na_endpoint_sendy(szablon):
+    assert SENDY_ENDPOINT in szablon
+    assert SENDY_LISTA in szablon
+
+
+def test_zapis_prosi_sendy_o_odpowiedz_zamiast_przekierowania(szablon):
+    """Bez boolean=true Sendy przekierowuje, a fetch nie pozna wyniku zapisu."""
+    assert re.search(r"boolean[\"']?\s*[:=,]\s*[\"']?true", szablon)
+    assert re.search(r"subform[\"']?\s*[:=,]\s*[\"']?yes", szablon)
+
+
+def test_formularz_ma_honeypot_i_zgode(szablon):
+    assert 'name="hp"' in szablon
+    assert 'id="nlGdpr"' in szablon
+
+
+def test_belka_wysuwa_sie_po_dwudziestu_sekundach(szablon):
+    assert re.search(r"\b20000\b", szablon)
+
+
+def test_zamknieta_belka_spi_czternascie_dni(szablon):
+    assert re.search(CZTERNASCIE_DNI, szablon)
+
+
+def test_szablon_linkuje_polityke_prywatnosci(szablon):
+    assert POLITYKA in szablon

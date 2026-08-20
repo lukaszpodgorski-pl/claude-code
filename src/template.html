@@ -404,6 +404,64 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
   #tq{flex:1 1 100%;width:auto}
 }
 
+/* ---------- newsletter: belka i modal ---------- */
+/* belka jest pierwszym dzieckiem #app, a nie nakladka position:fixed. Naglowek
+   trzyma wyszukiwarke i przelaczniki, wiec nakladka by je zaslonila. Jako element
+   kolumny belka spycha reszte w dol, a scrollLeft osi zostaje nietkniety.
+   Ujemny margines rowny wysokosci belki chowa ja nad krawedzia okna, wiec
+   animacja marginesu daje prawdziwe wysuwanie, a nie skok calego ukladu. */
+/* zawijanie z „flex:1 1 240px” na tekscie zalatwia waski ekran bez media query:
+   na szerokim wszystko stoi w jednej linii, na waskim tekst bierze cala szerokosc,
+   a przyciski schodza pod niego. Wysokosc jest wiec zmienna i ujemny margines,
+   ktory chowa belke nad krawedzia okna, liczy JS z pomiaru */
+#nlBar{flex:none;display:none;align-items:center;flex-wrap:wrap;gap:8px 12px;
+  padding:9px 14px 9px 18px;border-bottom:1px solid var(--line2);
+  background:var(--accent-soft);font-size:12.5px;color:var(--txt);line-height:1.4;
+  transition:margin-top .26s cubic-bezier(.4,0,.2,1)}
+#nlBar.show{display:flex}
+#nlBarText{flex:1 1 240px;min-width:0}
+#nlBarCta{flex:none;margin-left:auto;border-color:var(--accent);
+  color:var(--accent-txt);background:var(--surface)}
+#nlBarX{flex:none;width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);
+  background:transparent;color:var(--dim);cursor:pointer;font-size:13px;line-height:1}
+#nlBarX:hover{color:var(--txt);background:var(--hover2)}
+
+/* modal ponad tabela (95): przycisk newslettera dziala takze przy otwartej tabeli */
+#nlModal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;
+  justify-content:center;padding:18px;background:rgba(0,0,0,.45)}
+#nlModal[hidden]{display:none}
+#nlBox{position:relative;width:min(420px,100%);padding:20px 22px 18px;border-radius:14px;
+  background:var(--panel-grad);border:1px solid var(--line2);box-shadow:var(--shadow-lg)}
+#nlX{position:absolute;top:12px;right:14px;width:26px;height:26px;border-radius:7px;
+  border:1px solid var(--line2);background:var(--hover);color:var(--dim);
+  cursor:pointer;font-size:14px;line-height:1}
+#nlX:hover{color:var(--txt);background:var(--hover2)}
+#nlH{margin:0 34px 6px 0;font-size:16px;font-weight:650;letter-spacing:-.01em}
+#nlLead{margin:0 0 14px;font-size:12.5px;color:var(--dim);line-height:1.55}
+#nlMailLab{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--dim);margin-bottom:5px}
+#nlMail{width:100%;padding:8px 11px;border-radius:9px;border:1px solid var(--line2);
+  background:var(--surface);color:var(--txt);font-size:13px;font-family:var(--font);outline:none}
+#nlMail:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+#nlMail::placeholder{color:var(--dim2)}
+/* honeypot Sendy: pole poza ekranem, ktore wypelniaja tylko boty */
+.nl-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+#nlZgoda{display:flex;align-items:flex-start;gap:8px;margin-top:12px;
+  font-size:11.5px;color:var(--dim);line-height:1.5}
+#nlGdpr{flex:none;margin:2px 0 0;width:14px;height:14px;accent-color:var(--accent)}
+#nlZgoda>div{flex:1 1 auto;min-width:0}
+#nlGdprTxt{cursor:pointer}
+#nlZgoda a{color:var(--accent-txt)}
+#nlGo{width:100%;height:36px;margin-top:14px;border-radius:9px;border:1px solid var(--accent);
+  background:var(--accent);color:#fff;font-size:13px;font-weight:600;
+  font-family:var(--font);cursor:pointer;transition:.14s}
+#nlGo:hover:not(:disabled){filter:brightness(1.08)}
+#nlGo:disabled{opacity:.6;cursor:default}
+#nlMsg{margin-top:10px;font-size:11.5px;line-height:1.5;color:var(--accent-txt)}
+#nlMsg:empty{margin-top:0}
+#nlDoneT{font-size:16px;font-weight:650;letter-spacing:-.01em;margin:0 34px 6px 0}
+#nlDoneD{margin:0;font-size:12.5px;color:var(--dim);line-height:1.55}
+
 @media (max-width:1180px){#legend{display:none}}
 @media (max-width:820px){#q{width:130px}#sub{display:none}#tblTitle{display:none}#tsel{max-width:132px}
   #hd{flex-wrap:wrap;gap:8px 12px}
@@ -411,6 +469,14 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
 </style>
 
 <div id="app">
+  <!-- belka wysuwa sie nad naglowkiem, bo jest pierwszym elementem kolumny:
+       spycha uklad w dol zamiast zaslaniac wyszukiwarke i przelaczniki -->
+  <div id="nlBar">
+    <span id="nlBarText"></span>
+    <button class="btn" id="nlBarCta" type="button"></button>
+    <button id="nlBarX" type="button">✕</button>
+  </div>
+
   <header id="hd">
     <a class="hd-brand" id="home" href="https://lukaszpodgorski.pl">
       <div class="mark"><svg viewBox="0 0 24 24"><path d="M5 3v18h2v-7.2l11-3.3-11-3.3V3z"/></svg></div>
@@ -434,6 +500,7 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
       </div>
       <button class="btn on" id="tglLanes"></button>
       <button class="btn" id="tglTable"></button>
+      <button class="btn" id="nlBtn"></button>
       <button class="btn ico" id="theme"></button>
       <button class="btn" id="lang"></button>
     </div>
@@ -487,6 +554,34 @@ h1{margin:0;font-size:14.5px;font-weight:650;letter-spacing:-.01em;white-space:n
       </table>
       <div id="tsent"></div>
       <div id="tempty" hidden></div>
+    </div>
+  </div>
+
+  <div id="nlModal" hidden>
+    <div id="nlBox" role="dialog" aria-modal="true" aria-labelledby="nlH">
+      <button id="nlX" type="button">✕</button>
+      <h2 id="nlH"></h2>
+      <p id="nlLead"></p>
+      <form id="nlForm" novalidate>
+        <label id="nlMailLab" for="nlMail"></label>
+        <input id="nlMail" type="email" name="email" autocomplete="email" spellcheck="false">
+        <!-- honeypot Sendy: niewidoczne dla czlowieka, boty wypelniaja jak leci -->
+        <input id="nlHp" class="nl-hp" type="text" name="hp" tabindex="-1"
+               autocomplete="off" aria-hidden="true">
+        <div id="nlZgoda">
+          <input id="nlGdpr" type="checkbox" name="gdpr">
+          <!-- link poza etykieta: w jej srodku klikniecie w polityke przelaczalo tez zgode -->
+          <div><label for="nlGdpr" id="nlGdprTxt"></label>
+            <a id="nlPriv" href="https://lukaszpodgorski.pl/polityka-prywatnosci/"
+               target="_blank" rel="noopener"></a></div>
+        </div>
+        <button id="nlGo" type="submit"></button>
+        <div id="nlMsg" role="status"></div>
+      </form>
+      <div id="nlDone" hidden>
+        <h2 id="nlDoneT"></h2>
+        <p id="nlDoneD"></p>
+      </div>
     </div>
   </div>
 
@@ -732,6 +827,7 @@ function renderChrome() {
   $("#lang").title = U.langTitle;
   $("#home").title = U.homeTitle;
   tblChrome();
+  nlChrome();
 
   const nazwa = THEME === "auto" ? U.themeAuto : THEME === "light" ? U.themeLight : U.themeDark;
   $("#theme").title = fill(U.themeTitle, { v: nazwa });
@@ -1102,8 +1198,11 @@ addEventListener("mousemove", e => {
 addEventListener("mouseup", () => { if (drag) { sc.classList.remove("grabbing"); drag = null; } });
 
 addEventListener("keydown", e => {
-  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
   const k = e.key;
+  // modal newslettera leży nad wszystkim, więc łapie Esc także z pola e-mail,
+  // a pozostałe klawisze nie schodzą niżej, do osi czasu
+  if (nlOtwarty()) { if (k === "Escape") { e.preventDefault(); nlClose(); } return; }
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
   // przy otwartej tabeli oś czasu pod spodem nie reaguje na klawisze
   if (tblOtwarta()) {
     if (k === "Escape" || k === "t" || k === "T") { tblClose(); e.preventDefault(); }
@@ -1332,6 +1431,148 @@ function layout() {
   });
 }
 
+/* ---------- newsletter ---------- */
+// Sendy stoi pod tym samym originem co strona, więc zapis idzie zwykłym fetchem,
+// bez CORS i bez pośrednika. boolean=true każe Sendy odpowiedzieć gołym „1”
+// zamiast przekierowania, dzięki czemu modal zna prawdziwy wynik. Lista ma
+// double opt-in, więc sukces znaczy „poszedł link potwierdzający”, nie „zapisano”.
+const NL_URL = "/sendy/subscribe";
+const NL_LISTA = "Ty1TI6ayPZpGzayzEajXfA";
+const NL_PO_MS = 20000;                        // ile czekamy, zanim wysunie się belka
+const NL_SEN_MS = 14 * 24 * 60 * 60 * 1000;    // jak długo śpi belka zdjęta krzyżykiem
+const LS_NL_DONE = "cct.nl.done", LS_NL_SEN = "cct.nl.snooze";
+const MAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function nlChrome() {
+  $("#nlBtn").textContent = U.nlBtn;
+  $("#nlBtn").title = U.nlBtnTitle;
+  $("#nlBarText").textContent = U.nlBarText;
+  $("#nlBarCta").textContent = U.nlBarCta;
+  $("#nlBarX").title = U.nlBarClose;
+  $("#nlBarX").setAttribute("aria-label", U.nlBarClose);
+  $("#nlX").title = U.close;
+  $("#nlX").setAttribute("aria-label", U.close);
+  $("#nlH").textContent = U.nlTitle;
+  $("#nlLead").textContent = U.nlLead;
+  $("#nlMailLab").textContent = U.nlEmail;
+  $("#nlMail").placeholder = U.nlEmailPh;
+  $("#nlGdprTxt").textContent = U.nlConsent + " ";
+  $("#nlPriv").textContent = U.nlPrivacy;
+  $("#nlGo").textContent = U.nlSubmit;
+  $("#nlDoneT").textContent = U.nlOkTitle;
+  $("#nlDoneD").textContent = U.nlOkText;
+  $("#nlMsg").textContent = "";                // komunikat w starym języku myli
+}
+
+function nlOtwarty() { return !$("#nlModal").hasAttribute("hidden"); }
+
+/* belka nie wraca po zapisie, a zdjęta krzyżykiem śpi 14 dni. Oba znaczniki
+   siedzą w localStorage, więc wyczyszczenie danych witryny zaczyna pytanie od nowa */
+function nlSpi() {
+  if (localStorage.getItem(LS_NL_DONE)) return true;
+  const t = +localStorage.getItem(LS_NL_SEN);
+  return !!t && Date.now() - t < NL_SEN_MS;
+}
+
+// nakładki (panel wydania, lista wyników) wiszą pod dolną krawędzią nagłówka,
+// a belka tę krawędź przesuwa, więc po każdej animacji trzeba je przeliczyć.
+// Liczymy z zegara, nie z transitionend: w tle karty przejścia się nie odpalają
+const NL_ANIM_MS = 300;                        // 260 ms animacji plus zapas
+
+/* wysokość belki zależy od tego, w ilu liniach zmieści się tekst, więc ujemny
+   margines chowający ją nad krawędzią okna bierzemy z pomiaru, nie z CSS */
+function nlBarPokaz() {
+  const bar = $("#nlBar");
+  if (nlSpi() || bar.classList.contains("show")) return;
+  bar.classList.add("show");
+  bar.style.transition = "none";
+  bar.style.marginTop = -bar.offsetHeight + "px";
+  void bar.offsetHeight;                       // reflow rozdziela stan przed i po
+  bar.style.transition = "";
+  bar.style.marginTop = "0px";
+  setTimeout(ustawNakladki, NL_ANIM_MS);
+}
+
+function nlBarUkryj(uspij) {
+  const bar = $("#nlBar");
+  if (uspij) localStorage.setItem(LS_NL_SEN, String(Date.now()));
+  if (!bar.classList.contains("show")) return;
+  bar.style.marginTop = -bar.offsetHeight + "px";
+  setTimeout(() => {
+    bar.classList.remove("show");
+    bar.style.marginTop = "";
+    ustawNakladki();
+  }, NL_ANIM_MS);
+}
+
+let nlFokusPrzed = null;
+
+function nlOpen() {
+  if (nlOtwarty()) return;
+  nlFokusPrzed = document.activeElement;
+  $("#nlMsg").textContent = "";
+  $("#nlModal").removeAttribute("hidden");
+  $("#nlMail").focus();
+}
+
+function nlClose() {
+  $("#nlModal").setAttribute("hidden", "");
+  if (nlFokusPrzed && nlFokusPrzed.focus) nlFokusPrzed.focus();
+  nlFokusPrzed = null;
+}
+
+/* Sendy odpowiada zdaniem po angielsku; mapujemy dwa przypadki, które
+   użytkownik może sam naprawić, reszta idzie na komunikat ogólny */
+function nlBlad(odp) {
+  const s = odp.toLowerCase();
+  if (s.indexOf("already") > -1) return U.nlErrDup;
+  if (s.indexOf("email") > -1 || s.indexOf("invalid") > -1) return U.nlErrEmail;
+  return U.nlErrGeneric;
+}
+
+function nlSukces() {
+  localStorage.setItem(LS_NL_DONE, "1");
+  $("#nlLead").hidden = true;
+  $("#nlForm").hidden = true;
+  $("#nlDone").hidden = false;
+  nlBarUkryj(false);
+}
+
+$("#nlForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const mail = $("#nlMail").value.trim();
+  if (!MAIL_RX.test(mail)) { $("#nlMsg").textContent = U.nlErrEmail; $("#nlMail").focus(); return; }
+  if (!$("#nlGdpr").checked) { $("#nlMsg").textContent = U.nlConsentReq; $("#nlGdpr").focus(); return; }
+
+  const go = $("#nlGo");
+  go.disabled = true;
+  go.textContent = U.nlSending;
+  $("#nlMsg").textContent = "";
+  try {
+    const odp = await fetch(NL_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: new URLSearchParams({
+        email: mail, gdpr: "true", hp: $("#nlHp").value,
+        list: NL_LISTA, subform: "yes", boolean: "true", referrer: location.href,
+      }),
+    });
+    const tresc = (await odp.text()).trim();
+    if (odp.ok && tresc === "1") { nlSukces(); return; }
+    $("#nlMsg").textContent = nlBlad(tresc);
+  } catch (err) {
+    $("#nlMsg").textContent = U.nlErrGeneric;
+  }
+  go.disabled = false;
+  go.textContent = U.nlSubmit;
+});
+
+$("#nlBtn").onclick = nlOpen;
+$("#nlBarCta").onclick = () => { nlOpen(); nlBarUkryj(false); };
+$("#nlBarX").onclick = () => nlBarUkryj(true);
+$("#nlX").onclick = nlClose;
+$("#nlModal").addEventListener("click", e => { if (e.target === $("#nlModal")) nlClose(); });
+
 /* ---------- start ---------- */
 $("#track").style.width = WFULL + "px";
 addEventListener("resize", () => { layout(); drawMini(); syncWin(); ustawNakladki(); });
@@ -1341,4 +1582,5 @@ renderAll();                       // renderAll ustawia też --hd-h dla nakłade
 sc.scrollLeft = sc.scrollWidth;
 syncWin();
 setTimeout(() => { const h = $("#hint"); if (h) { h.style.opacity = 0; setTimeout(() => h.remove(), 500); } }, 9000);
+if (!nlSpi()) setTimeout(nlBarPokaz, NL_PO_MS);
 </script>
